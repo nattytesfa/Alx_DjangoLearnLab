@@ -1,22 +1,14 @@
 # LibraryProject
 
-This Django project serves as the foundation for developing library management applications.
+Django project for library management system.
 
-## Project Structure Exploration
+## Project Structure
 
 ### manage.py
-- A command-line utility that lets you interact with this Django project
-- Used for running server, creating apps, running migrations
+- Django command-line utility
 
 ### LibraryProject/settings.py
-- Configuration for the Django project
-- Contains database settings, installed apps, middleware, templates
+- Project configuration
 
 ### LibraryProject/urls.py
-- The URL declarations for the project; a "table of contents" of your Django-powered site
-- Maps URL patterns to views
-
-### Other Files:
-- `wsgi.py`: WSGI configuration for deployment
-- `asgi.py`: ASGI configuration for async servers
-- `__init__.py`: Makes directory a Python package
+- URL routing
