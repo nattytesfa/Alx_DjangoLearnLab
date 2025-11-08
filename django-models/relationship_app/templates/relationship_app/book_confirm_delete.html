@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Delete Book</title>
+</head>
+<body>
+    <div style="float: right;">
+        {% if user.is_authenticated %}
+            Welcome, {{ user.username }}! 
+            <a href="{% url 'relationship_app:logout' %}">Logout</a>
+        {% else %}
+            <a href="{% url 'relationship_app:login' %}">Login</a> |
+            <a href="{% url 'relationship_app:register' %}">Register</a>
+        {% endif %}
+    </div>
+    
+    <h1>Delete Book</h1>
+    <p>Are you sure you want to delete "{{ book.title }}"?</p>
+    <form method="post">
+        {% csrf_token %}
+        <button type="submit">Confirm Delete</button>
+    </form>
+    <a href="{% url 'relationship_app:list_books' %}">Cancel</a>
+</body>
+</html>

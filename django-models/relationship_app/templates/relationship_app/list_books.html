@@ -23,9 +23,22 @@
     </div>
     
     <h1>Books Available:</h1>
+    
+    {% if perms.relationship_app.can_add_book %}
+    <p><a href="{% url 'relationship_app:add_book' %}">Add New Book</a></p>
+    {% endif %}
+    
     <ul>
         {% for book in books %}
-        <li>{{ book.title }} by {{ book.author.name }}</li>
+        <li>
+            {{ book.title }} by {{ book.author.name }}
+            {% if perms.relationship_app.can_change_book %}
+            | <a href="{% url 'relationship_app:edit_book' book.pk %}">Edit</a>
+            {% endif %}
+            {% if perms.relationship_app.can_delete_book %}
+            | <a href="{% url 'relationship_app:delete_book' book.pk %}">Delete</a>
+            {% endif %}
+        </li>
         {% empty %}
         <li>No books available.</li>
         {% endfor %}
