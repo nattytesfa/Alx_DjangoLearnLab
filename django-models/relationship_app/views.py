@@ -6,8 +6,11 @@ from django.contrib.auth.models import User
 from django.views.generic import ListView
 from django.views.generic.detail import DetailView
 from django.contrib.auth.views import LoginView, LogoutView
-from .models import Book, Library, UserProfile, Author
+from .models import Book
+from .models import Library
+from .models import UserProfile, Author
 from .forms import BookForm
+
 
 # Function-based view to list all books
 def list_books(request):
