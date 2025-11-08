@@ -8,6 +8,13 @@
     <div style="float: right;">
         {% if user.is_authenticated %}
             Welcome, {{ user.username }}! 
+            {% if user.userprofile.role == 'Admin' %}
+                (Admin) | <a href="{% url 'relationship_app:admin_view' %}">Admin Panel</a> |
+            {% elif user.userprofile.role == 'Librarian' %}
+                (Librarian) | <a href="{% url 'relationship_app:librarian_view' %}">Librarian Panel</a> |
+            {% elif user.userprofile.role == 'Member' %}
+                (Member) | <a href="{% url 'relationship_app:member_view' %}">Member Panel</a> |
+            {% endif %}
             <a href="{% url 'relationship_app:logout' %}">Logout</a>
         {% else %}
             <a href="{% url 'relationship_app:login' %}">Login</a> |
