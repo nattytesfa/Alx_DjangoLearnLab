@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Book List</title>
+</head>
+<body>
+    <h1>Books</h1>
+    
+    {% if perms.bookshelf.can_create %}
+    <p><a href="{% url 'bookshelf:book_create' %}">Add New Book</a></p>
+    {% endif %}
+    
+    <ul>
+    {% for book in books %}
+        <li>
+            {{ book.title }} by {{ book.author.name }}
+            {% if perms.bookshelf.can_edit %}
+            | <a href="{% url 'bookshelf:book_edit' book.id %}">Edit</a>
+            {% endif %}
+            {% if perms.bookshelf.can_delete %}
+            | <a href="{% url 'bookshelf:book_delete' book.id %}">Delete</a>
+            {% endif %}
+        </li>
+    {% empty %}
+        <li>No books available.</li>
+    {% endfor %}
+    </ul>
+</body>
+</html>
