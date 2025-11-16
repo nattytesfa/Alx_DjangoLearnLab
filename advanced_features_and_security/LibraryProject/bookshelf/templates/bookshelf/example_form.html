@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Secure Form Example</title>
+</head>
+<body>
+    <h1>Secure Contact Form</h1>
+    <p>This form demonstrates secure form practices including CSRF protection and input validation.</p>
+    
+    <!-- Security: CSRF Token for protection -->
+    <form method="post">
+        {% csrf_token %}
+        
+        {{ form.as_p }}
+        
+        <button type="submit">Submit Securely</button>
+    </form>
+    
+    <!-- Security: Form validation messages -->
+    {% if messages %}
+    <div class="messages">
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }}">
+            {{ message }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+</body>
+</html>

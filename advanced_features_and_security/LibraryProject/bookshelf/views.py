@@ -3,6 +3,8 @@ from django.contrib.auth.decorators import login_required, permission_required
 from django.contrib import messages
 from .models import Book, Author
 from django import forms
+from .forms import ExampleForm, SecureBookForm
+
 
 class BookForm(forms.ModelForm):
     class Meta:
@@ -59,3 +61,55 @@ def book_delete(request, book_id):
         messages.success(request, 'Book deleted successfully!')
         return redirect('bookshelf:book_list')
     return render(request, 'bookshelf/book_confirm_delete.html', {'book': book})
+
+
+def example_form_view(request):
+    """
+    Security: Example view demonstrating secure form handling
+    Shows proper CSRF protection and input validation
+    """
+    if request.method == 'POST':
+        form = ExampleForm(request.POST)
+        if form.is_valid():
+            # Security: Form data is now validated and sanitized
+            name = form.cleaned_data['name']
+            email = form.cleaned_data['email']
+            message = form.cleaned_data['message']
+            
+            # Security: Success message with escaped data
+            messages.success(
+                request, 
+                f'Thank you {name}! Your message has been received securely.'
+            )
+            
+            # In a real application, you would save to database here
+            # Security: Always use validated form.cleaned_data
+            
+            return render(request, 'bookshelf/form_success.html', {
+                'name': name,
+                'email': email,
+            })
+    else:
+        form = ExampleForm()
+    
+    return render(request, 'bookshelf/example_form.html', {'form': form})
+
+@login_required
+def secure_form_demo(request):
+    """
+    Security: Demonstration of secure form practices
+    """
+    if request.method == 'POST':
+        form = SecureBookForm(request.POST)
+        if form.is_valid():
+            # Security: The form instance is ready to be saved
+            book = form.save(commit=False)
+            # Additional security: Any additional processing here
+            book.save()
+            messages.success(request, 'Book created securely!')
+            return redirect('bookshelf:book_list')
+    else:
+        form = SecureBookForm()
+    
+    return render(request, 'bookshelf/secure_form_demo.html', {'form': form})
+
