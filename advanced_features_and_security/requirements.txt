@@ -1,0 +1,6 @@
+asgiref==3.10.0
+Django==5.2.8
+django-csp==4.0
+packaging==25.0
+sqlparse==0.5.3
+django-csp
