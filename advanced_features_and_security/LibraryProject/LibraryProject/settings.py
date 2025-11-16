@@ -1,6 +1,6 @@
 """
-Django security settings configuration with CSP
-Enhanced security measures for production deployment
+Django HTTPS and Security Configuration
+Enhanced security settings for production deployment with HTTPS enforcement
 """
 
 import os
@@ -116,29 +116,74 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # Custom User Model
 AUTH_USER_MODEL = 'bookshelf.CustomUser'
 
-# ==================== SECURITY SETTINGS ====================
+# ==================== HTTPS & SECURITY SETTINGS ====================
 
-# Security: Cookie settings for production
-CSRF_COOKIE_SECURE = True  # Only send CSRF cookie over HTTPS
-SESSION_COOKIE_SECURE = True  # Only send session cookie over HTTPS
+# Security: HTTPS Configuration
+# These settings enforce HTTPS connections in production
+
+# SECURE_SSL_REDIRECT: Redirect all HTTP requests to HTTPS
+# Setting: True to enable automatic redirect from HTTP to HTTPS
+# Impact: Ensures all traffic uses encrypted HTTPS connections
+SECURE_SSL_REDIRECT = not DEBUG  # Enable in production only
+
+# Security: HTTP Strict Transport Security (HSTS)
+# HSTS instructs browsers to only connect via HTTPS for specified time
+
+# SECURE_HSTS_SECONDS: Time in seconds for HSTS policy
+# Setting: 31536000 = 1 year (recommended for production)
+# Impact: Browsers will automatically use HTTPS for this duration
+SECURE_HSTS_SECONDS = 31536000 if not DEBUG else 0  # 1 year in production
+
+# SECURE_HSTS_INCLUDE_SUBDOMAINS: Apply HSTS to all subdomains
+# Setting: True to protect all subdomains
+# Impact: All subdomains will also require HTTPS
+SECURE_HSTS_INCLUDE_SUBDOMAINS = not DEBUG
+
+# SECURE_HSTS_PRELOAD: Allow inclusion in browser preload lists
+# Setting: True to enable preloading
+# Impact: Site can be included in browser HSTS preload lists
+SECURE_HSTS_PRELOAD = not DEBUG
+
+# ==================== SECURE COOKIE SETTINGS ====================
+
+# Security: Configure cookies to be sent only over HTTPS
+
+# SESSION_COOKIE_SECURE: Only send session cookies over HTTPS
+# Setting: True to prevent session cookies from being sent over HTTP
+# Impact: Protects session cookies from being intercepted
+SESSION_COOKIE_SECURE = not DEBUG
+
+# CSRF_COOKIE_SECURE: Only send CSRF cookies over HTTPS
+# Setting: True to prevent CSRF cookies from being sent over HTTP
+# Impact: Protects CSRF tokens from being intercepted
+CSRF_COOKIE_SECURE = not DEBUG
+
+# Security: Additional cookie security settings
 CSRF_COOKIE_HTTPONLY = True  # Prevent JavaScript access to CSRF cookie
 SESSION_COOKIE_HTTPONLY = True  # Prevent JavaScript access to session cookie
 CSRF_COOKIE_SAMESITE = 'Lax'  # CSRF cookie same-site policy
 
-# Security: Browser protection headers
-SECURE_BROWSER_XSS_FILTER = True  # Enable XSS filtering in browser
-X_FRAME_OPTIONS = 'DENY'  # Prevent clickjacking by denying frame embedding
-SECURE_CONTENT_TYPE_NOSNIFF = True  # Prevent MIME type sniffing
+# ==================== SECURITY HEADERS ====================
+
+# Security: Additional HTTP headers for enhanced protection
+
+# X_FRAME_OPTIONS: Clickjacking protection
+# Setting: 'DENY' to prevent any framing of the site
+# Impact: Protects against clickjacking attacks by denying frame embedding
+X_FRAME_OPTIONS = 'DENY'
+
+# SECURE_CONTENT_TYPE_NOSNIFF: Prevent MIME type sniffing
+# Setting: True to prevent browsers from interpreting files as different MIME types
+# Impact: Reduces risk of XSS attacks through MIME confusion
+SECURE_CONTENT_TYPE_NOSNIFF = True
+
+# SECURE_BROWSER_XSS_FILTER: Enable browser XSS filtering
+# Setting: True to enable browser's built-in XSS protection
+# Impact: Adds an additional layer of XSS protection
+SECURE_BROWSER_XSS_FILTER = True
 
 # Security: Referrer policy to limit information leakage
 SECURE_REFERRER_POLICY = 'strict-origin-when-cross-origin'
-
-# Security: Production deployment settings (when DEBUG=False)
-if not DEBUG:
-    SECURE_SSL_REDIRECT = True  # Redirect all HTTP to HTTPS
-    SECURE_HSTS_SECONDS = 31536000  # 1 year HSTS
-    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
-    SECURE_HSTS_PRELOAD = True
 
 # ==================== CONTENT SECURITY POLICY (CSP) ====================
 
@@ -170,3 +215,32 @@ CSP_REPORT_URI = None  # Set to a URL to receive violation reports
 # Security: Upgrade insecure requests in production
 if not DEBUG:
     CSP_UPGRADE_INSECURE_REQUESTS = True
+
+# ==================== PRODUCTION DEPLOYMENT NOTES ====================
+
+"""
+HTTPS Deployment Checklist:
+
+1. Web Server Configuration:
+   - Configure Nginx/Apache with SSL certificates
+   - Set up SSL termination at the web server level
+   - Redirect all HTTP traffic to HTTPS
+
+2. SSL Certificate:
+   - Obtain SSL certificate from trusted CA (Let's Encrypt, etc.)
+   - Configure certificate paths in web server
+   - Set up certificate renewal process
+
+3. Django Settings Verified:
+   - DEBUG = False
+   - ALLOWED_HOSTS configured with production domain
+   - SECURE_SSL_REDIRECT = True
+   - All secure cookie settings enabled
+   - HSTS settings configured appropriately
+
+4. Testing:
+   - Verify HTTPS redirect works
+   - Check security headers are present
+   - Test that cookies are marked Secure
+   - Validate CSP headers
+"""
