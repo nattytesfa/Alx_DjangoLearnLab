@@ -6,7 +6,18 @@ This guide provides instructions for configuring your Django application to use 
 ## Web Server Configuration Examples
 
 ### Nginx Configuration (nginx.conf)
+
+### Important: Proxy Header Configuration
+When using a reverse proxy like Nginx, you must configure the `X-Forwarded-Proto` header:
+
 ```nginx
+location / {
+    proxy_pass http://127.0.0.1:8000;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;  # This tells Django it's HTTPS
+}
 server {
     listen 80;
     server_name yourdomain.com www.yourdomain.com;

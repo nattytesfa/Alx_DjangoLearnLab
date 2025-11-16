@@ -121,6 +121,11 @@ AUTH_USER_MODEL = 'bookshelf.CustomUser'
 # Security: HTTPS Configuration
 # These settings enforce HTTPS connections in production
 
+# SECURE_PROXY_SSL_HEADER: Required when behind a reverse proxy
+# Setting: Tuple indicating the header and value that indicate HTTPS
+# Impact: Ensures Django correctly detects HTTPS requests from proxy
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
 # SECURE_SSL_REDIRECT: Redirect all HTTP requests to HTTPS
 # Setting: True to enable automatic redirect from HTTP to HTTPS
 # Impact: Ensures all traffic uses encrypted HTTPS connections
@@ -244,3 +249,6 @@ HTTPS Deployment Checklist:
    - Test that cookies are marked Secure
    - Validate CSP headers
 """
+
+
+
