@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Librarian Dashboard</title>
+</head>
+<body>
+    <div style="float: right;">
+        Welcome, {{ user.username }} (Librarian) | 
+        <a href="{% url 'relationship_app:logout' %}">Logout</a>
+    </div>
+    
+    <h1>Librarian Dashboard</h1>
+    <p>Welcome to the Librarian panel. You can manage library operations.</p>
+    
+    <h2>Librarian Actions:</h2>
+    <ul>
+        <li>Manage Book Inventory</li>
+        <li>Process Book Checkouts</li>
+        <li>Manage Member Accounts</li>
+        <li>Generate Library Reports</li>
+    </ul>
+    
+    <a href="{% url 'relationship_app:list_books' %}">Back to Books</a> |
+    <a href="{% url 'relationship_app:library_list' %}">View Libraries</a>
+</body>
+</html>
