@@ -85,14 +85,14 @@ def example_form_view(request):
             # In a real application, you would save to database here
             # Security: Always use validated form.cleaned_data
             
-            return render(request, 'bookshelf/form_success.html', {
-                'name': name,
-                'email': email,
+            # Return to the same form with success message
+            return render(request, 'bookshelf/form_example.html', {
+                'form': ExampleForm(),  # Reset form
             })
     else:
         form = ExampleForm()
     
-    return render(request, 'bookshelf/example_form.html', {'form': form})
+    return render(request, 'bookshelf/form_example.html', {'form': form})
 
 @login_required
 def secure_form_demo(request):
