@@ -70,14 +70,14 @@ def member_view(request):
 
 
 @login_required
-@permission_required('relationship_app.can_view_book', raise_exception=True)
+@permission_required('bookshelf.can_view', raise_exception=True) 
 def list_books(request):
     """View to list all books - requires can_view_book permission"""
     books = Book.objects.all()
     return render(request, 'relationship_app/list_books.html', {'books': books})
 
 @login_required
-@permission_required('relationship_app.can_create_book', raise_exception=True)
+@permission_required('bookshelf.can_create', raise_exception=True) 
 def add_book(request):
     """View to add a new book - requires can_create_book permission"""
     if request.method == 'POST':
@@ -91,7 +91,7 @@ def add_book(request):
     return render(request, 'relationship_app/book_form.html', {'form': form})
 
 @login_required
-@permission_required('relationship_app.can_edit_book', raise_exception=True)
+@permission_required('bookshelf.can_edit', raise_exception=True) 
 def edit_book(request, book_id):
     """View to edit a book - requires can_edit_book permission"""
     book = get_object_or_404(Book, id=book_id)
@@ -106,7 +106,7 @@ def edit_book(request, book_id):
     return render(request, 'relationship_app/book_form.html', {'form': form})
 
 @login_required
-@permission_required('relationship_app.can_delete_book', raise_exception=True)
+@permission_required('bookshelf.can_delete', raise_exception=True) 
 def delete_book(request, book_id):
     """View to delete a book - requires can_delete_book permission"""
     book = get_object_or_404(Book, id=book_id)

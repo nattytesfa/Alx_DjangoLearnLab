@@ -24,7 +24,7 @@
     
     <h1>Books Available:</h1>
     
-    {% if perms.relationship_app.can_create_book %}
+{% if perms.bookshelf.can_create %}
     <p><a href="{% url 'relationship_app:add_book' %}">Add New Book</a></p>
     {% endif %}
     
@@ -32,10 +32,10 @@
         {% for book in books %}
         <li>
             {{ book.title }} by {{ book.author.name }}
-            {% if perms.relationship_app.can_edit_book %}
+{% if perms.bookshelf.can_edit %}
             | <a href="{% url 'relationship_app:edit_book' book.pk %}">Edit</a>
             {% endif %}
-            {% if perms.relationship_app.can_delete_book %}
+{% if perms.bookshelf.can_delete %}
             | <a href="{% url 'relationship_app:delete_book' book.pk %}">Delete</a>
             {% endif %}
         </li>

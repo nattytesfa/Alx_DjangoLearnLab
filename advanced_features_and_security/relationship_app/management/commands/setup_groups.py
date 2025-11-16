@@ -1,7 +1,7 @@
 from django.core.management.base import BaseCommand
 from django.contrib.auth.models import Group, Permission
 from django.contrib.contenttypes.models import ContentType
-from relationship_app.models import Book
+from LibraryProject.bookshelf.models import Book  # Updated import
 
 class Command(BaseCommand):
     help = 'Creates default groups and assigns permissions for book management'
@@ -12,10 +12,10 @@ class Command(BaseCommand):
         
         # Get all the custom permissions we defined
         try:
-            can_view = Permission.objects.get(codename='can_view_book', content_type=content_type)
-            can_create = Permission.objects.get(codename='can_create_book', content_type=content_type)
-            can_edit = Permission.objects.get(codename='can_edit_book', content_type=content_type)
-            can_delete = Permission.objects.get(codename='can_delete_book', content_type=content_type)
+            can_view = Permission.objects.get(codename='can_view', content_type=content_type)
+            can_create = Permission.objects.get(codename='can_create', content_type=content_type)
+            can_edit = Permission.objects.get(codename='can_edit', content_type=content_type)
+            can_delete = Permission.objects.get(codename='can_delete', content_type=content_type)
         except Permission.DoesNotExist:
             self.stdout.write(self.style.ERROR('Permissions not found. Please run migrations first.'))
             return
@@ -44,9 +44,4 @@ class Command(BaseCommand):
         else:
             self.stdout.write(self.style.SUCCESS('Admins group updated'))
 
-        # Display the groups and their permissions
-        self.stdout.write(self.style.SUCCESS('\nGroups created successfully:'))
-        for group in Group.objects.all():
-            self.stdout.write(f"\n{group.name}:")
-            for perm in group.permissions.all():
-                self.stdout.write(f"  - {perm.name}")
+        self.stdout.write(self.style.SUCCESS('\nGroups created successfully!'))
