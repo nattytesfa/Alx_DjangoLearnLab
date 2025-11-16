@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 """Django's command-line utility for administrative tasks."""
 import os
 import sys
@@ -6,7 +6,10 @@ import sys
 
 def main():
     """Run administrative tasks."""
-    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'LibraryProject.settings')
+    # Add the current directory to Python path
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    
+    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'LibraryProject.LibraryProject.settings')
     try:
         from django.core.management import execute_from_command_line
     except ImportError as exc:
