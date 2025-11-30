@@ -85,7 +85,8 @@ class BookListViewTests(BaseTestCase):
         Should return 201 Created.
         """
         url = reverse('book-create')
-        self.client.force_authenticate(user=self.user)
+        # Use self.client.login instead of force_authenticate
+        self.client.login(username='testuser', password='testpass123')
         
         book_data = {
             'title': 'New Test Book',
@@ -104,6 +105,9 @@ class BookListViewTests(BaseTestCase):
             self.assertEqual(response.data['title'], 'New Test Book')
         
         self.assertEqual(Book.objects.count(), 5)  # 4 initial + 1 new
+        
+        # Logout after test
+        self.client.logout()
     
     def test_create_book_unauthenticated(self):
         """
@@ -239,7 +243,8 @@ class BookDetailViewTests(BaseTestCase):
         Test updating a book with authentication.
         """
         url = reverse('book-update', kwargs={'pk': self.book1.id})
-        self.client.force_authenticate(user=self.user)
+        # Use self.client.login instead of force_authenticate
+        self.client.login(username='testuser', password='testpass123')
         
         update_data = {
             'title': 'Updated Title',
@@ -255,6 +260,9 @@ class BookDetailViewTests(BaseTestCase):
         self.book1.refresh_from_db()
         self.assertEqual(self.book1.title, 'Updated Title')
         self.assertEqual(self.book1.publication_year, 1998)
+        
+        # Logout after test
+        self.client.logout()
     
     def test_update_book_unauthenticated(self):
         """
@@ -277,7 +285,8 @@ class BookDetailViewTests(BaseTestCase):
         Test partial update of a book.
         """
         url = reverse('book-update', kwargs={'pk': self.book1.id})
-        self.client.force_authenticate(user=self.user)
+        # Use self.client.login instead of force_authenticate
+        self.client.login(username='testuser', password='testpass123')
         
         update_data = {
             'title': 'Partially Updated Title'
@@ -292,19 +301,26 @@ class BookDetailViewTests(BaseTestCase):
         self.assertEqual(self.book1.title, 'Partially Updated Title')
         # Other fields should remain unchanged
         self.assertEqual(self.book1.publication_year, 1997)
+        
+        # Logout after test
+        self.client.logout()
     
     def test_delete_book_authenticated(self):
         """
         Test deleting a book with authentication.
         """
         url = reverse('book-delete', kwargs={'pk': self.book1.id})
-        self.client.force_authenticate(user=self.user)
+        # Use self.client.login instead of force_authenticate
+        self.client.login(username='testuser', password='testpass123')
         
         response = self.client.delete(url)
         
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         self.assertFalse(Book.objects.filter(id=self.book1.id).exists())
         self.assertEqual(Book.objects.count(), 3)  # One less book
+        
+        # Logout after test
+        self.client.logout()
     
     def test_delete_book_unauthenticated(self):
         """
@@ -360,7 +376,8 @@ class ValidationTests(BaseTestCase):
         Test creating a book with future publication year (should fail validation).
         """
         url = reverse('book-create')
-        self.client.force_authenticate(user=self.user)
+        # Use self.client.login instead of force_authenticate
+        self.client.login(username='testuser', password='testpass123')
         
         from django.utils import timezone
         future_year = timezone.now().year + 1
@@ -375,6 +392,9 @@ class ValidationTests(BaseTestCase):
         
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn('publication_year', response.data)
+        
+        # Logout after test
+        self.client.logout()
 
 
 class PermissionTests(BaseTestCase):
@@ -386,7 +406,8 @@ class PermissionTests(BaseTestCase):
         """
         Test that admin users can perform all CRUD operations.
         """
-        self.client.force_authenticate(user=self.admin_user)
+        # Use self.client.login for admin user
+        self.client.login(username='admin', password='adminpass123')
         
         # Test create
         create_url = reverse('book-create')
@@ -408,3 +429,26 @@ class PermissionTests(BaseTestCase):
         delete_url = reverse('book-delete', kwargs={'pk': self.book2.id})
         response = self.client.delete(delete_url)
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        
+        # Logout after test
+        self.client.logout()
+    
+    def test_regular_user_can_perform_operations(self):
+        """
+        Test that regular users can perform CRUD operations when authenticated.
+        """
+        # Use self.client.login for regular user
+        self.client.login(username='testuser', password='testpass123')
+        
+        # Test create
+        create_url = reverse('book-create')
+        book_data = {
+            'title': 'User Created Book',
+            'publication_year': 2023,
+            'author': self.author1.id
+        }
+        response = self.client.post(create_url, book_data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        
+        # Logout after test
+        self.client.logout()
