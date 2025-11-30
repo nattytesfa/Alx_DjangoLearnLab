@@ -3,7 +3,6 @@
 *.pot
 *.pyc
 __pycache__/
-local_settings.py
 db.sqlite3
 db.sqlite3-journal
 media/
@@ -31,17 +30,15 @@ VENV/
 ehthumbs.db
 Thumbs.db
 
-# Project specific
-api_project/db.sqlite3
+# Project specific - ignore db files in all project directories
+*/db.sqlite3
+*/db.sqlite3-journal
 
 # Coverage reports
 htmlcov/
 .coverage
 .coverage.*
 coverage.xml
-
-# PyCharm
-.idea/
 
 # Environment variables
 .env

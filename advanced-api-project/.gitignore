@@ -4,9 +4,10 @@
 *.pyc
 __pycache__/
 db.sqlite3
+db.sqlite3-journal
 media/
 
-# Virtual Environment
+# Virtual Environment (redundant but specific to this project)
 venv/
 env/
 .venv/
@@ -14,8 +15,6 @@ env/
 # IDE
 .vscode/
 .idea/
-*.swp
-*.swo
 
 # OS
 .DS_Store
