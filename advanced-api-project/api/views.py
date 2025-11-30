@@ -14,26 +14,87 @@ from .permissions import IsAuthenticatedOrReadOnly, IsAdminOrReadOnly
 
 
 class BookListView(generics.ListAPIView):
-    """
-    List all books with filtering, searching, and ordering capabilities.
+        """
+    Advanced Book List View with comprehensive query capabilities.
     
-    Features:
-    - Filter by publication_year and author
-    - Search by title
-    - Order by any field
-    - Public access (no authentication required)
+    IMPLEMENTATION DETAILS:
+    
+    FILTERING:
+    - Uses DjangoFilterBackend for exact match filtering
+    - Configured fields: publication_year, author
+    - Supports multiple filter parameters combined
+    
+    SEARCHING:
+    - Uses SearchFilter for text-based searching
+    - Configured fields: title, author__name
+    - Case-insensitive and supports partial matches
+    - Uses Django's __icontains lookup
+    
+    ORDERING:
+    - Uses OrderingFilter for sorting results
+    - Configured fields: title, publication_year, author__name, id
+    - Supports descending order with '-' prefix
+    - Supports multiple field ordering
+    
+    CUSTOM FILTERING:
+    - get_queryset method extended for custom range filtering
+    - Additional parameters: min_year, max_year
+    
+    USAGE EXAMPLES:
+    
+    1. Filter books from specific year:
+       GET /api/books/?publication_year=1997
+    
+    2. Search for books with 'potter' in title:
+       GET /api/books/?search=potter
+    
+    3. Order books by publication year (newest first):
+       GET /api/books/?ordering=-publication_year
+    
+    4. Combined query - search and filter:
+       GET /api/books/?search=harry&publication_year=1997
+    
+    5. Multiple ordering:
+       GET /api/books/?ordering=author__name,title
+    
+    6. Custom range filtering:
+       GET /api/books/?min_year=1900&max_year=2000
     """
     queryset = Book.objects.all()
     serializer_class = BookSerializer
-    permission_classes = [permissions.AllowAny]
+    permission_classes = [AllowAny]
     
     # Enable filtering, searching, and ordering
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    
+    # Filtering configuration
     filterset_fields = ['publication_year', 'author']
-    search_fields = ['title']
-    ordering_fields = ['title', 'publication_year', 'author__name']
+    
+    # Search configuration - search in multiple fields
+    search_fields = ['title', 'author__name']
+    
+    # Ordering configuration
+    ordering_fields = ['title', 'publication_year', 'author__name', 'id']
     ordering = ['title']  # Default ordering
-
+    
+    def get_queryset(self):
+        """
+        Enhanced queryset with additional filtering capabilities.
+        This method can be extended for custom filtering logic.
+        """
+        queryset = super().get_queryset()
+        
+        # Example of custom filtering beyond DjangoFilterBackend
+        # You can add custom query parameters here
+        min_year = self.request.query_params.get('min_year')
+        max_year = self.request.query_params.get('max_year')
+        
+        if min_year:
+            queryset = queryset.filter(publication_year__gte=min_year)
+        if max_year:
+            queryset = queryset.filter(publication_year__lte=max_year)
+            
+        return queryset
 
 class BookDetailView(generics.RetrieveAPIView):
     """
