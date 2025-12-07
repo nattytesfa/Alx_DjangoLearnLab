@@ -7,39 +7,16 @@ from .models import Post, Comment
 
 
 class PostForm(forms.ModelForm):
-    """
-    Form for creating and updating blog posts WITH TAGS.
-    """
     class Meta:
         model = Post
-        fields = ['title', 'content', 'tags']  # Include tags here
+        fields = ['title', 'content', 'tags']
         widgets = {
-            'title': forms.TextInput(attrs={
-                'class': 'form-control',
-                'placeholder': 'Enter post title',
-                'autofocus': True,
-                'maxlength': '200'
-            }),
-            'content': forms.Textarea(attrs={
-                'class': 'form-control',
-                'placeholder': 'Write your post content here...',
-                'rows': 10
-            }),
-            'tags': TagWidget(attrs={
-                'class': 'form-control',
-                'placeholder': 'Enter tags separated by commas'
-            }),
+            'title': forms.TextInput(attrs={'class': 'form-control'}),
+            'content': forms.Textarea(attrs={'class': 'form-control', 'rows': 10}),
+            'tags': TagWidget(),
         }
     
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        # Add character counter for title
-        self.fields['title'].widget.attrs['oninput'] = 'updateCharCounter(this)'
-    
     def clean_title(self):
-        """
-        Validate that title is not empty and has reasonable length.
-        """
         title = self.cleaned_data.get('title', '').strip()
         if not title:
             raise ValidationError('Title cannot be empty.')
@@ -50,9 +27,6 @@ class PostForm(forms.ModelForm):
         return title
     
     def clean_content(self):
-        """
-        Validate that content is not empty.
-        """
         content = self.cleaned_data.get('content', '').strip()
         if not content:
             raise ValidationError('Content cannot be empty.')
