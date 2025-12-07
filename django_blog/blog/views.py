@@ -9,8 +9,7 @@ from django.contrib.auth import login
 from django.db.models import Q
 from django.utils import timezone
 from .models import Post, Comment
-from .forms import UserRegisterForm, UserUpdateForm, PostForm
-
+from .forms import UserRegisterForm, UserUpdateForm, PostForm, CommentForm
 
 def home(request):
     """
@@ -258,3 +257,124 @@ def add_comment(request, pk):
             messages.error(request, 'Comment cannot be empty.')
     
     return redirect('post-detail', pk=post.pk)
+
+
+
+# Comment Create View
+class CommentCreateView(LoginRequiredMixin, CreateView):
+    """
+    View for creating a new comment.
+    Only accessible to authenticated users.
+    """
+    model = Comment
+    form_class = CommentForm
+    template_name = 'blog/post_detail.html'  # You can use the post detail template
+    
+    def form_valid(self, form):
+        """
+        Set the comment author and post before saving.
+        """
+        form.instance.author = self.request.user
+        form.instance.post_id = self.kwargs['pk']
+        response = super().form_valid(form)
+        
+        messages.success(
+            self.request, 
+            'Your comment has been added successfully!'
+        )
+        return response
+    
+    def get_success_url(self):
+        """
+        Redirect to the post detail page after comment creation.
+        """
+        return reverse_lazy('post-detail', kwargs={'pk': self.kwargs['pk']})
+
+
+# Comment Update View
+class CommentUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
+    """
+    View for updating an existing comment.
+    Only accessible to the comment author.
+    """
+    model = Comment
+    form_class = CommentForm
+    template_name = 'blog/comment_form.html'
+    
+    def test_func(self):
+        """
+        Test if user is the comment author.
+        """
+        comment = self.get_object()
+        return self.request.user == comment.author
+    
+    def handle_no_permission(self):
+        """
+        Handle unauthorized access attempts.
+        """
+        messages.error(self.request, 'You are not authorized to edit this comment.')
+        comment = self.get_object()
+        return redirect('post-detail', pk=comment.post.pk)
+    
+    def form_valid(self, form):
+        """
+        Set the updated_at timestamp and show success message.
+        """
+        form.instance.updated_at = timezone.now()
+        messages.success(
+            self.request, 
+            'Your comment has been updated successfully!'
+        )
+        return super().form_valid(form)
+    
+    def get_success_url(self):
+        """
+        Redirect to the post detail page after comment update.
+        """
+        comment = self.get_object()
+        return reverse_lazy('post-detail', kwargs={'pk': comment.post.pk})
+
+
+# Comment Delete View
+class CommentDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
+    """
+    View for deleting a comment.
+    Only accessible to the comment author.
+    """
+    model = Comment
+    template_name = 'blog/comment_confirm_delete.html'
+    
+    def test_func(self):
+        """
+        Test if user is the comment author.
+        """
+        comment = self.get_object()
+        return self.request.user == comment.author
+    
+    def handle_no_permission(self):
+        """
+        Handle unauthorized access attempts.
+        """
+        messages.error(self.request, 'You are not authorized to delete this comment.')
+        comment = self.get_object()
+        return redirect('post-detail', pk=comment.post.pk)
+    
+    def delete(self, request, *args, **kwargs):
+        """
+        Override delete to add success message.
+        """
+        comment = self.get_object()
+        post_pk = comment.post.pk
+        messages.success(
+            request, 
+            'Comment has been deleted successfully.'
+        )
+        response = super().delete(request, *args, **kwargs)
+        return response
+    
+    def get_success_url(self):
+        """
+        Redirect to the post detail page after comment deletion.
+        """
+        # Since the comment is deleted, we need to get post_pk from kwargs
+        return reverse_lazy('post-detail', kwargs={'pk': self.kwargs.get('post_pk')})
