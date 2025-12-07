@@ -1,0 +1,36 @@
+{% extends 'blog/base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1>Posts tagged with: "{{ tag_name }}"</h1>
+    
+    {% if posts %}
+        {% for post in posts %}
+            <div class="card mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <a href="{% url 'post-detail' post.pk %}">{{ post.title }}</a>
+                    </h5>
+                    <p class="card-text">{{ post.content|truncatewords:50 }}</p>
+                    <div class="mb-2">
+                        {% for tag in post.tags.all %}
+                            <a href="{% url 'tag-posts' tag.name %}" class="badge bg-primary text-decoration-none">
+                                {{ tag.name }}
+                            </a>
+                        {% endfor %}
+                    </div>
+                    <small class="text-muted">
+                        By {{ post.author.username }} | {{ post.published_date|date:"F d, Y" }}
+                    </small>
+                </div>
+            </div>
+        {% endfor %}
+        
+        <!-- Pagination (similar to search template) -->
+    {% else %}
+        <div class="alert alert-info">
+            No posts found with this tag.
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

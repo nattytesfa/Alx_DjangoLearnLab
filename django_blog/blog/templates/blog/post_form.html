@@ -116,7 +116,20 @@
                 Write your post content here. You can use basic HTML tags or markdown-style formatting.
             </div>
         </div>
+                <div class="form-group mb-3">
+            <label for="id_tags_input">Tags:</label>
+            {{ form.tags_input }}
+            <small class="form-text text-muted">Enter tags separated by commas (e.g., django, python, web-development)</small>
+        </div>
         
+        <div class="form-group">
+            <div class="form-check">
+                <input type="checkbox" class="form-check-input" id="previewPost">
+                <label class="form-check-label" for="previewPost">
+                    Show live preview while typing
+                </label>
+            </div>
+        </div>
         <div class="form-group">
             <div class="form-check">
                 <input type="checkbox" class="form-check-input" id="previewPost">

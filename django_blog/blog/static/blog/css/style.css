@@ -1181,3 +1181,67 @@ body {
         padding: 1.5rem;
     }
 }
+
+/* Add to your existing CSS file */
+
+/* Search Form Styling */
+.search-form-container {
+    display: flex;
+    align-items: center;
+    margin: 0 10px;
+}
+
+.search-form {
+    display: flex;
+    align-items: center;
+    background: #f8f9fa;
+    border-radius: 20px;
+    padding: 5px 10px;
+    border: 1px solid #dee2e6;
+}
+
+.search-form input {
+    border: none;
+    background: transparent;
+    padding: 5px 10px;
+    outline: none;
+    width: 150px;
+}
+
+.search-form input:focus {
+    width: 200px;
+    transition: width 0.3s ease;
+}
+
+.search-form button {
+    background: none;
+    border: none;
+    color: #6c757d;
+    cursor: pointer;
+    padding: 5px;
+}
+
+.search-form button:hover {
+    color: #007bff;
+}
+
+/* Responsive design for search form */
+@media (max-width: 768px) {
+    .search-form-container {
+        order: 3;
+        width: 100%;
+        margin: 10px 0;
+    }
+    
+    .search-form {
+        width: 100%;
+    }
+    
+    .search-form input {
+        width: 100%;
+    }
+    
+    .search-form input:focus {
+        width: 100%;
+    }
+}

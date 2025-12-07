@@ -20,6 +20,48 @@ def home(request):
         'recent_posts': recent_posts
     })
 
+class PostSearchView(ListView):
+    model = Post
+    template_name = 'blog/post_search.html'
+    context_object_name = 'posts'
+    paginate_by = 10
+    
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        query = self.request.GET.get('q', '').strip()
+        
+        if query:
+            # Search in title, content, and tags
+            queryset = queryset.filter(
+                Q(title__icontains=query) |
+                Q(content__icontains=query) |
+                Q(tags__name__icontains=query)
+            ).distinct()
+        
+        return queryset.order_by('-published_date')
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['search_query'] = self.request.GET.get('q', '')
+        return context
+
+
+class TagPostListView(ListView):
+    model = Post
+    template_name = 'blog/tag_posts.html'
+    context_object_name = 'posts'
+    paginate_by = 10
+    
+    def get_queryset(self):
+        tag_name = self.kwargs.get('tag_name')
+        if tag_name:
+            return Post.objects.filter(tags__name__iexact=tag_name).order_by('-published_date')
+        return Post.objects.none()
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['tag_name'] = self.kwargs.get('tag_name')
+        return context
 
 class PostListView(ListView):
     """

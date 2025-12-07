@@ -2,12 +2,13 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.urls import reverse
 from django.utils import timezone
-
+from taggit.managers import TaggableManager
 
 class Post(models.Model):
     """
     Blog Post model representing a blog post/article.
     """
+    tags = TaggableManager(blank=True)
     title = models.CharField(max_length=200)
     content = models.TextField()
     published_date = models.DateTimeField(auto_now_add=True)

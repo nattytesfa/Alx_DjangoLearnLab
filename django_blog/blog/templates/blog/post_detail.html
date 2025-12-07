@@ -149,7 +149,21 @@
     <div class="post-content">
         {{ post.content|linebreaks }}
     </div>
+      
+    <div class="post-tags mt-4 mb-4">
+        <strong>Tags:</strong>
+        {% if post.tags.all %}
+            {% for tag in post.tags.all %}
+                <a href="{% url 'tag-posts' tag.name %}" class="badge bg-secondary text-decoration-none">
+                    {{ tag.name }}
+                </a>
+            {% endfor %}
+        {% else %}
+            <span class="text-muted">No tags</span>
+        {% endif %}
+    </div>
     
+    <div class="post-actions">
     <div class="post-actions">
         {% if user == post.author or user.is_superuser %}
         <a href="{% url 'post-update' post.pk %}" class="btn btn-warning">

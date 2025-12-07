@@ -19,6 +19,15 @@
             <li><a href="{% url 'post-list' %}">Blog</a></li>
             {% if user.is_authenticated %}
                 <li><a href="{% url 'post-create' %}">New Post</a></li>
+                
+                <!-- ADD SEARCH FORM HERE -->
+                <li class="search-form-container">
+                    <form class="search-form" action="{% url 'post-search' %}" method="get">
+                        <input type="search" name="q" placeholder="Search posts..." aria-label="Search">
+                        <button type="submit"><i class="fas fa-search"></i></button>
+                    </form>
+                </li>
+                
                 <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-toggle="dropdown">
                         <i class="fas fa-user"></i> {{ user.username }}
@@ -37,13 +46,20 @@
                     </div>
                 </li>
             {% else %}
+                <!-- ADD SEARCH FORM HERE FOR NON-AUTHENTICATED USERS -->
+                <li class="search-form-container">
+                    <form class="search-form" action="{% url 'post-search' %}" method="get">
+                        <input type="search" name="q" placeholder="Search posts..." aria-label="Search">
+                        <button type="submit"><i class="fas fa-search"></i></button>
+                    </form>
+                </li>
+                
                 <li><a href="{% url 'login' %}">Login</a></li>
                 <li><a href="{% url 'register' %}">Register</a></li>
             {% endif %}
         </ul>
     </div>
 </nav>
-
     <!-- Messages -->
     {% if messages %}
     <div class="container">

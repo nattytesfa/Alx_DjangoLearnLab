@@ -2,7 +2,63 @@ from django import forms
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
+from taggit.forms import TagWidget
 from .models import Post, Comment
+
+
+class PostForm(forms.ModelForm):
+    """
+    Form for creating and updating blog posts WITH TAGS.
+    """
+    class Meta:
+        model = Post
+        fields = ['title', 'content', 'tags']  # Include tags here
+        widgets = {
+            'title': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Enter post title',
+                'autofocus': True,
+                'maxlength': '200'
+            }),
+            'content': forms.Textarea(attrs={
+                'class': 'form-control',
+                'placeholder': 'Write your post content here...',
+                'rows': 10
+            }),
+            'tags': TagWidget(attrs={
+                'class': 'form-control',
+                'placeholder': 'Enter tags separated by commas'
+            }),
+        }
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Add character counter for title
+        self.fields['title'].widget.attrs['oninput'] = 'updateCharCounter(this)'
+    
+    def clean_title(self):
+        """
+        Validate that title is not empty and has reasonable length.
+        """
+        title = self.cleaned_data.get('title', '').strip()
+        if not title:
+            raise ValidationError('Title cannot be empty.')
+        if len(title) < 5:
+            raise ValidationError('Title should be at least 5 characters long.')
+        if len(title) > 200:
+            raise ValidationError('Title cannot exceed 200 characters.')
+        return title
+    
+    def clean_content(self):
+        """
+        Validate that content is not empty.
+        """
+        content = self.cleaned_data.get('content', '').strip()
+        if not content:
+            raise ValidationError('Content cannot be empty.')
+        if len(content) < 10:
+            raise ValidationError('Content should be at least 10 characters long.')
+        return content
 
 
 class CommentForm(forms.ModelForm):
@@ -69,56 +125,6 @@ class CommentEditForm(forms.ModelForm):
             raise ValidationError('Comment cannot exceed 1000 characters.')
         return content
 
-
-class PostForm(forms.ModelForm):
-    """
-    Form for creating and updating blog posts.
-    """
-    class Meta:
-        model = Post
-        fields = ['title', 'content']
-        widgets = {
-            'title': forms.TextInput(attrs={
-                'class': 'form-control',
-                'placeholder': 'Enter post title',
-                'autofocus': True
-            }),
-            'content': forms.Textarea(attrs={
-                'class': 'form-control',
-                'placeholder': 'Write your post content here...',
-                'rows': 10
-            }),
-        }
-    
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        # Add character counter for title
-        self.fields['title'].widget.attrs['maxlength'] = '200'
-        self.fields['title'].widget.attrs['oninput'] = 'updateCharCounter(this)'
-    
-    def clean_title(self):
-        """
-        Validate that title is not empty and has reasonable length.
-        """
-        title = self.cleaned_data.get('title', '').strip()
-        if not title:
-            raise ValidationError('Title cannot be empty.')
-        if len(title) < 5:
-            raise ValidationError('Title should be at least 5 characters long.')
-        if len(title) > 200:
-            raise ValidationError('Title cannot exceed 200 characters.')
-        return title
-    
-    def clean_content(self):
-        """
-        Validate that content is not empty.
-        """
-        content = self.cleaned_data.get('content', '').strip()
-        if not content:
-            raise ValidationError('Content cannot be empty.')
-        if len(content) < 10:
-            raise ValidationError('Content should be at least 10 characters long.')
-        return content
 
 class UserRegisterForm(UserCreationForm):
     """
