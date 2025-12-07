@@ -1,0 +1,123 @@
+{% extends 'blog/base.html' %}
+
+{% block title %}Profile - {{ user.username }}{% endblock %}
+
+{% block content %}
+<div class="profile-container">
+    <div class="row">
+        <!-- Left Column: Profile Info -->
+        <div class="col-md-4">
+            <div class="profile-card">
+                <div class="profile-header">
+                    <div class="profile-avatar">
+                        <i class="fas fa-user-circle fa-5x"></i>
+                    </div>
+                    <h3>{{ user.username }}</h3>
+                    <p class="profile-email">{{ user.email }}</p>
+                    <p class="profile-member-since">
+                        <i class="fas fa-calendar-alt"></i>
+                        Member since: {{ user.date_joined|date:"F d, Y" }}
+                    </p>
+                </div>
+                
+                <div class="profile-stats">
+                    <div class="stat">
+                        <h4>{{ user.posts.count }}</h4>
+                        <p>Posts</p>
+                    </div>
+                    <div class="stat">
+                        <h4>{{ user.comments.count }}</h4>
+                        <p>Comments</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Right Column: Profile Form -->
+        <div class="col-md-8">
+            <div class="profile-form-card">
+                <h3>Update Profile Information</h3>
+                
+                {% if messages %}
+                {% for message in messages %}
+                <div class="alert alert-{{ message.tags }}">
+                    {{ message }}
+                </div>
+                {% endfor %}
+                {% endif %}
+                
+                <form method="POST" class="profile-form">
+                    {% csrf_token %}
+                    
+                    {% if form.errors %}
+                    <div class="alert alert-danger">
+                        <strong>Please correct the errors below:</strong>
+                        <ul>
+                            {% for field, errors in form.errors.items %}
+                                {% for error in errors %}
+                                    <li>{{ error }}</li>
+                                {% endfor %}
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    {% endif %}
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="{{ form.username.id_for_label }}">Username</label>
+                                {{ form.username }}
+                                <small class="form-text text-muted">This will be displayed publicly.</small>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="{{ form.email.id_for_label }}">Email Address</label>
+                                {{ form.email }}
+                                <small class="form-text text-muted">We'll use this for notifications.</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="{{ form.first_name.id_for_label }}">First Name</label>
+                                {{ form.first_name }}
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="{{ form.last_name.id_for_label }}">Last Name</label>
+                                {{ form.last_name }}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <button type="submit" class="btn btn-primary">Update Profile</button>
+                        <a href="{% url 'password_change' %}" class="btn btn-outline-secondary">Change Password</a>
+                    </div>
+                </form>
+                
+                <hr>
+                
+                <div class="profile-actions">
+                    <h4>Account Actions</h4>
+                    <div class="action-buttons">
+                        <a href="{% url 'post-create' %}" class="btn btn-success">
+                            <i class="fas fa-plus"></i> Create New Post
+                        </a>
+                        <a href="{% url 'post-list' %}?author={{ user.id }}" class="btn btn-info">
+                            <i class="fas fa-list"></i> View My Posts
+                        </a>
+                        <a href="{% url 'logout' %}" class="btn btn-warning">
+                            <i class="fas fa-sign-out-alt"></i> Logout
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -113,7 +113,35 @@ DATABASES = {
     }
 }
 """
+# Authentication Settings
+# ======================
 
+# Login/Logout URLs
+LOGIN_URL = 'login'
+LOGIN_REDIRECT_URL = 'home'
+LOGOUT_REDIRECT_URL = 'home'
+
+# Password validation is already configured in AUTH_PASSWORD_VALIDATORS
+
+# Email backend for password reset (development only)
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
+# Session settings
+SESSION_COOKIE_AGE = 1209600  # 2 weeks in seconds
+SESSION_EXPIRE_AT_BROWSER_CLOSE = False
+
+# CSRF protection (already enabled by default)
+CSRF_USE_SESSIONS = False
+CSRF_COOKIE_SECURE = False  # Set to True in production with HTTPS
+
+# Security settings for production (commented out for development)
+"""
+SECURE_SSL_REDIRECT = True
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = True
+SECURE_BROWSER_XSS_FILTER = True
+SECURE_CONTENT_TYPE_NOSNIFF = True
+"""
 
 
 # Internationalization

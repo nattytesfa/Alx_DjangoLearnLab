@@ -1,13 +1,14 @@
-from django.shortcuts import render
-
-# Create your views here.from django.shortcuts import render, get_object_or_404, redirect
+from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
+from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView, View
 from django.contrib.auth.models import User
 from django.contrib import messages
 from django.urls import reverse_lazy
+from django.contrib.auth import login
+from django.db.models import Q
 from .models import Post, Comment
+from .forms import UserRegisterForm, UserUpdateForm
 
 
 def home(request):
@@ -30,7 +31,28 @@ class PostListView(ListView):
     paginate_by = 5
     
     def get_queryset(self):
-        return Post.objects.all().order_by('-published_date')
+        queryset = Post.objects.all().order_by('-published_date')
+        
+        # Filter by author if requested
+        author_id = self.request.GET.get('author')
+        if author_id:
+            queryset = queryset.filter(author_id=author_id)
+        
+        # Search functionality
+        search_query = self.request.GET.get('search')
+        if search_query:
+            queryset = queryset.filter(
+                Q(title__icontains=search_query) |
+                Q(content__icontains=search_query) |
+                Q(author__username__icontains=search_query)
+            )
+        
+        return queryset
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['search_query'] = self.request.GET.get('search', '')
+        return context
 
 
 class PostDetailView(DetailView):
@@ -92,6 +114,43 @@ class PostDeleteView(LoginRequiredMixin, DeleteView):
             messages.error(request, 'You are not authorized to delete this post.')
             return redirect('post-detail', pk=obj.pk)
         return super().dispatch(request, *args, **kwargs)
+
+
+class UserRegisterView(CreateView):
+    """
+    View for user registration.
+    """
+    form_class = UserRegisterForm
+    template_name = 'blog/register.html'
+    success_url = reverse_lazy('home')
+    
+    def dispatch(self, request, *args, **kwargs):
+        if request.user.is_authenticated:
+            return redirect('home')
+        return super().dispatch(request, *args, **kwargs)
+    
+    def form_valid(self, form):
+        user = form.save()
+        login(self.request, user)
+        messages.success(self.request, f'Account created successfully! Welcome, {user.username}!')
+        return redirect(self.success_url)
+
+
+class UserProfileView(LoginRequiredMixin, UpdateView):
+    """
+    View for user profile management.
+    """
+    model = User
+    form_class = UserUpdateForm
+    template_name = 'blog/profile.html'
+    success_url = reverse_lazy('profile')
+    
+    def get_object(self):
+        return self.request.user
+    
+    def form_valid(self, form):
+        messages.success(self.request, 'Your profile has been updated!')
+        return super().form_valid(form)
 
 
 @login_required
