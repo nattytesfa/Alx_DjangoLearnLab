@@ -1,14 +1,15 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView, View
 from django.contrib.auth.models import User
 from django.contrib import messages
 from django.urls import reverse_lazy
 from django.contrib.auth import login
 from django.db.models import Q
+from django.utils import timezone
 from .models import Post, Comment
-from .forms import UserRegisterForm, UserUpdateForm
+from .forms import UserRegisterForm, UserUpdateForm, PostForm
 
 
 def home(request):
@@ -24,11 +25,12 @@ def home(request):
 class PostListView(ListView):
     """
     View for listing all blog posts.
+    Accessible to all users.
     """
     model = Post
     template_name = 'blog/post_list.html'
     context_object_name = 'posts'
-    paginate_by = 5
+    paginate_by = 10
     
     def get_queryset(self):
         queryset = Post.objects.all().order_by('-published_date')
@@ -52,68 +54,144 @@ class PostListView(ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['search_query'] = self.request.GET.get('search', '')
+        
+        # Add statistics for the template
+        if self.request.user.is_authenticated:
+            context['user_post_count'] = Post.objects.filter(
+                author=self.request.user
+            ).count()
+        
         return context
 
 
 class PostDetailView(DetailView):
     """
     View for displaying a single blog post.
+    Accessible to all users.
     """
     model = Post
     template_name = 'blog/post_detail.html'
     context_object_name = 'post'
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        post = self.get_object()
+        
+        # Get approved comments or all if user is superuser
+        if self.request.user.is_superuser:
+            comments = post.comments.all()
+        else:
+            comments = post.comments.filter(approved_comment=True)
+        
+        context['comments'] = comments
+        
+        # Check if user can edit/delete this post
+        if self.request.user.is_authenticated:
+            context['can_edit'] = (
+                post.author == self.request.user or 
+                self.request.user.is_superuser
+            )
+        
+        return context
 
 
 class PostCreateView(LoginRequiredMixin, CreateView):
     """
     View for creating a new blog post.
+    Only accessible to authenticated users.
     """
     model = Post
+    form_class = PostForm
     template_name = 'blog/post_form.html'
-    fields = ['title', 'content']
     
     def form_valid(self, form):
         form.instance.author = self.request.user
-        messages.success(self.request, 'Post created successfully!')
-        return super().form_valid(form)
+        form.instance.published_date = timezone.now()
+        response = super().form_valid(form)
+        
+        messages.success(
+            self.request, 
+            f'Your post "{form.instance.title}" has been published successfully!'
+        )
+        return response
+    
+    def get_success_url(self):
+        return reverse_lazy('post-detail', kwargs={'pk': self.object.pk})
 
 
-class PostUpdateView(LoginRequiredMixin, UpdateView):
+class PostUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     """
     View for updating an existing blog post.
+    Only accessible to the post author or superuser.
     """
     model = Post
+    form_class = PostForm
     template_name = 'blog/post_form.html'
-    fields = ['title', 'content']
     
-    def dispatch(self, request, *args, **kwargs):
-        # Check if user is the author or superuser
-        obj = self.get_object()
-        if obj.author != request.user and not request.user.is_superuser:
-            messages.error(request, 'You are not authorized to edit this post.')
-            return redirect('post-detail', pk=obj.pk)
-        return super().dispatch(request, *args, **kwargs)
+    def test_func(self):
+        """
+        Test if user is the author or superuser.
+        """
+        post = self.get_object()
+        return (
+            self.request.user == post.author or 
+            self.request.user.is_superuser
+        )
+    
+    def handle_no_permission(self):
+        """
+        Handle unauthorized access attempts.
+        """
+        messages.error(self.request, 'You are not authorized to edit this post.')
+        return redirect('post-detail', pk=self.kwargs['pk'])
     
     def form_valid(self, form):
-        messages.success(self.request, 'Post updated successfully!')
+        messages.success(
+            self.request, 
+            f'Your post "{form.instance.title}" has been updated successfully!'
+        )
         return super().form_valid(form)
+    
+    def get_success_url(self):
+        return reverse_lazy('post-detail', kwargs={'pk': self.object.pk})
 
 
-class PostDeleteView(LoginRequiredMixin, DeleteView):
+class PostDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
     """
     View for deleting a blog post.
+    Only accessible to the post author or superuser.
     """
     model = Post
     template_name = 'blog/post_confirm_delete.html'
     success_url = reverse_lazy('post-list')
     
-    def dispatch(self, request, *args, **kwargs):
-        # Check if user is the author or superuser
-        obj = self.get_object()
-        if obj.author != request.user and not request.user.is_superuser:
-            messages.error(request, 'You are not authorized to delete this post.')
-            return redirect('post-detail', pk=obj.pk)
-        return super().dispatch(request, *args, **kwargs)
+    def test_func(self):
+        """
+        Test if user is the author or superuser.
+        """
+        post = self.get_object()
+        return (
+            self.request.user == post.author or 
+            self.request.user.is_superuser
+        )
+    
+    def handle_no_permission(self):
+        """
+        Handle unauthorized access attempts.
+        """
+        messages.error(self.request, 'You are not authorized to delete this post.')
+        return redirect('post-detail', pk=self.kwargs['pk'])
+    
+    def delete(self, request, *args, **kwargs):
+        """
+        Override delete to add success message.
+        """
+        post = self.get_object()
+        messages.success(
+            request, 
+            f'Post "{post.title}" has been deleted successfully.'
+        )
+        return super().delete(request, *args, **kwargs)
 
 
 class UserRegisterView(CreateView):

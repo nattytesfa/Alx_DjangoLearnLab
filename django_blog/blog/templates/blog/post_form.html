@@ -1,0 +1,332 @@
+{% extends 'blog/base.html' %}
+
+{% block title %}
+    {% if form.instance.pk %}Edit Post{% else %}Create New Post{% endif %} - Django Blog
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .post-form-container {
+        max-width: 800px;
+        margin: 0 auto;
+    }
+    
+    .char-counter {
+        text-align: right;
+        font-size: 0.875rem;
+        color: #6c757d;
+        margin-top: 0.25rem;
+    }
+    
+    .form-help {
+        font-size: 0.875rem;
+        color: #6c757d;
+        margin-top: 0.25rem;
+    }
+    
+    .editor-toolbar {
+        background: #f8f9fa;
+        border: 1px solid #ddd;
+        border-bottom: none;
+        padding: 0.5rem;
+        border-radius: 4px 4px 0 0;
+    }
+    
+    .editor-toolbar button {
+        background: none;
+        border: 1px solid #ddd;
+        border-radius: 3px;
+        padding: 0.25rem 0.5rem;
+        margin-right: 0.25rem;
+        cursor: pointer;
+    }
+    
+    .editor-toolbar button:hover {
+        background: #e9ecef;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="post-form-container">
+    <h1>{% if form.instance.pk %}Edit Post{% else %}Create New Post{% endif %}</h1>
+    
+    {% if form.instance.pk %}
+    <div class="alert alert-info">
+        <i class="fas fa-info-circle"></i> You are editing a post published on {{ form.instance.published_date|date:"F d, Y" }}
+    </div>
+    {% endif %}
+    
+    <form method="POST" class="post-form">
+        {% csrf_token %}
+        
+        {% if form.errors %}
+        <div class="alert alert-danger">
+            <strong>Please correct the errors below:</strong>
+            <ul>
+                {% for field, errors in form.errors.items %}
+                    {% for error in errors %}
+                        <li><strong>{{ field|title }}:</strong> {{ error }}</li>
+                    {% endfor %}
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+        
+        <div class="form-group">
+            <label for="{{ form.title.id_for_label }}">Title</label>
+            {{ form.title }}
+            <div class="char-counter" id="title-counter">
+                <span id="title-chars">0</span>/200 characters
+            </div>
+            <div class="form-help">
+                Make it clear and descriptive. Good titles help readers find your post.
+            </div>
+        </div>
+        
+        <div class="form-group">
+            <label for="{{ form.content.id_for_label }}">Content</label>
+            
+            <div class="editor-toolbar">
+                <button type="button" onclick="formatText('bold')" title="Bold">
+                    <i class="fas fa-bold"></i>
+                </button>
+                <button type="button" onclick="formatText('italic')" title="Italic">
+                    <i class="fas fa-italic"></i>
+                </button>
+                <button type="button" onclick="formatText('underline')" title="Underline">
+                    <i class="fas fa-underline"></i>
+                </button>
+                <button type="button" onclick="insertLink()" title="Insert Link">
+                    <i class="fas fa-link"></i>
+                </button>
+                <button type="button" onclick="insertImage()" title="Insert Image">
+                    <i class="fas fa-image"></i>
+                </button>
+                <button type="button" onclick="insertCode()" title="Insert Code">
+                    <i class="fas fa-code"></i>
+                </button>
+            </div>
+            
+            {{ form.content }}
+            <div class="char-counter" id="content-counter">
+                <span id="content-chars">0</span> characters
+            </div>
+            <div class="form-help">
+                Write your post content here. You can use basic HTML tags or markdown-style formatting.
+            </div>
+        </div>
+        
+        <div class="form-group">
+            <div class="form-check">
+                <input type="checkbox" class="form-check-input" id="previewPost">
+                <label class="form-check-label" for="previewPost">
+                    Show live preview while typing
+                </label>
+            </div>
+        </div>
+        
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary btn-lg">
+                <i class="fas fa-{% if form.instance.pk %}save{% else %}plus{% endif %}"></i>
+                {% if form.instance.pk %}Update Post{% else %}Publish Post{% endif %}
+            </button>
+            
+            <a href="{% if form.instance.pk %}{% url 'post-detail' form.instance.pk %}{% else %}{% url 'post-list' %}{% endif %}" 
+               class="btn btn-outline-secondary">
+                <i class="fas fa-times"></i> Cancel
+            </a>
+            
+            {% if form.instance.pk %}
+            <a href="{% url 'post-delete' form.instance.pk %}" class="btn btn-outline-danger">
+                <i class="fas fa-trash"></i> Delete Post
+            </a>
+            {% endif %}
+        </div>
+    </form>
+    
+    {% if form.instance.pk %}
+    <div class="post-preview mt-4" id="live-preview" style="display: none;">
+        <h3>Live Preview</h3>
+        <div class="preview-content card">
+            <div class="card-body" id="preview-content">
+                <!-- Preview will be inserted here by JavaScript -->
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Character counter for title
+    document.addEventListener('DOMContentLoaded', function() {
+        const titleInput = document.getElementById('{{ form.title.id_for_label }}');
+        const titleChars = document.getElementById('title-chars');
+        const contentInput = document.getElementById('{{ form.content.id_for_label }}');
+        const contentChars = document.getElementById('content-chars');
+        
+        function updateCounters() {
+            if (titleInput && titleChars) {
+                titleChars.textContent = titleInput.value.length;
+            }
+            if (contentInput && contentChars) {
+                contentChars.textContent = contentInput.value.length;
+            }
+        }
+        
+        if (titleInput) {
+            titleInput.addEventListener('input', updateCounters);
+            updateCounters(); // Initialize
+        }
+        
+        if (contentInput) {
+            contentInput.addEventListener('input', updateCounters);
+            updateCounters(); // Initialize
+            
+            // Live preview functionality
+            const previewCheckbox = document.getElementById('previewPost');
+            const previewSection = document.getElementById('live-preview');
+            const previewContent = document.getElementById('preview-content');
+            
+            if (previewCheckbox && previewSection && previewContent) {
+                previewCheckbox.addEventListener('change', function() {
+                    if (this.checked) {
+                        previewSection.style.display = 'block';
+                        updatePreview();
+                    } else {
+                        previewSection.style.display = 'none';
+                    }
+                });
+                
+                contentInput.addEventListener('input', function() {
+                    if (previewCheckbox.checked) {
+                        updatePreview();
+                    }
+                });
+            }
+        }
+    });
+    
+    function updatePreview() {
+        const contentInput = document.getElementById('{{ form.content.id_for_label }}');
+        const previewContent = document.getElementById('preview-content');
+        
+        if (contentInput && previewContent) {
+            // Simple markdown/HTML preview
+            let content = contentInput.value;
+            
+            // Convert markdown-style formatting
+            content = content
+                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                .replace(/\*(.*?)\*/g, '<em>$1</em>')
+                .replace(/`(.*?)`/g, '<code>$1</code>')
+                .replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2">$1</a>')
+                .replace(/\n/g, '<br>');
+            
+            previewContent.innerHTML = content;
+        }
+    }
+    
+    // Text formatting functions
+    function formatText(command) {
+        const contentInput = document.getElementById('{{ form.content.id_for_label }}');
+        if (!contentInput) return;
+        
+        const start = contentInput.selectionStart;
+        const end = contentInput.selectionEnd;
+        const selectedText = contentInput.value.substring(start, end);
+        
+        let formattedText = '';
+        
+        switch(command) {
+            case 'bold':
+                formattedText = `**${selectedText}**`;
+                break;
+            case 'italic':
+                formattedText = `*${selectedText}*`;
+                break;
+            case 'underline':
+                formattedText = `<u>${selectedText}</u>`;
+                break;
+        }
+        
+        // Replace selected text with formatted text
+        contentInput.value = contentInput.value.substring(0, start) + 
+                            formattedText + 
+                            contentInput.value.substring(end);
+        
+        // Restore cursor position
+        contentInput.focus();
+        contentInput.setSelectionRange(start + formattedText.length, start + formattedText.length);
+        
+        // Trigger input event for counters
+        contentInput.dispatchEvent(new Event('input'));
+    }
+    
+    function insertLink() {
+        const url = prompt('Enter URL:', 'https://');
+        const text = prompt('Enter link text:', '');
+        
+        if (url && text) {
+            const contentInput = document.getElementById('{{ form.content.id_for_label }}');
+            const start = contentInput.selectionStart;
+            const markdownLink = `[${text}](${url})`;
+            
+            contentInput.value = contentInput.value.substring(0, start) + 
+                                markdownLink + 
+                                contentInput.value.substring(start);
+            
+            contentInput.focus();
+            contentInput.setSelectionRange(start + markdownLink.length, start + markdownLink.length);
+            contentInput.dispatchEvent(new Event('input'));
+        }
+    }
+    
+    function insertImage() {
+        const url = prompt('Enter image URL:', 'https://');
+        const alt = prompt('Enter alt text:', '');
+        
+        if (url && alt) {
+            const contentInput = document.getElementById('{{ form.content.id_for_label }}');
+            const start = contentInput.selectionStart;
+            const markdownImage = `![${alt}](${url})`;
+            
+            contentInput.value = contentInput.value.substring(0, start) + 
+                                markdownImage + 
+                                contentInput.value.substring(start);
+            
+            contentInput.focus();
+            contentInput.setSelectionRange(start + markdownImage.length, start + markdownImage.length);
+            contentInput.dispatchEvent(new Event('input'));
+        }
+    }
+    
+    function insertCode() {
+        const contentInput = document.getElementById('{{ form.content.id_for_label }}');
+        const start = contentInput.selectionStart;
+        const end = contentInput.selectionEnd;
+        const selectedText = contentInput.value.substring(start, end);
+        
+        let codeBlock = '';
+        if (selectedText) {
+            codeBlock = `\`${selectedText}\``;
+        } else {
+            codeBlock = '`code here`';
+        }
+        
+        contentInput.value = contentInput.value.substring(0, start) + 
+                            codeBlock + 
+                            contentInput.value.substring(end);
+        
+        contentInput.focus();
+        if (selectedText) {
+            contentInput.setSelectionRange(start + codeBlock.length, start + codeBlock.length);
+        } else {
+            contentInput.setSelectionRange(start + 1, start + 10);
+        }
+        contentInput.dispatchEvent(new Event('input'));
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,80 @@
+{% extends 'blog/base.html' %}
+
+{% block title %}Delete Post - Django Blog{% endblock %}
+
+{% block content %}
+<div class="delete-confirmation">
+    <div class="confirmation-card">
+        <div class="confirmation-header">
+            <i class="fas fa-exclamation-triangle fa-3x text-warning"></i>
+            <h2>Delete Post Confirmation</h2>
+        </div>
+        
+        <div class="confirmation-content">
+            <div class="alert alert-danger">
+                <h4>Warning: This action cannot be undone!</h4>
+                <p>You are about to permanently delete the following post:</p>
+            </div>
+            
+            <div class="post-to-delete">
+                <h3>"{{ object.title }}"</h3>
+                <div class="post-meta">
+                    <span><i class="fas fa-user"></i> {{ object.author.username }}</span>
+                    <span><i class="fas fa-calendar"></i> {{ object.published_date|date:"F d, Y" }}</span>
+                </div>
+                <div class="post-preview">
+                    {{ object.content|truncatewords:50|linebreaks }}
+                </div>
+            </div>
+            
+            <div class="statistics">
+                <div class="stat">
+                    <h4>{{ object.comments.count }}</h4>
+                    <p>Comments will also be deleted</p>
+                </div>
+            </div>
+            
+            <form method="POST">
+                {% csrf_token %}
+                
+                <div class="form-group">
+                    <div class="form-check">
+                        <input type="checkbox" class="form-check-input" id="confirmDelete" required>
+                        <label class="form-check-label" for="confirmDelete">
+                            I understand that this action is permanent and cannot be undone
+                        </label>
+                    </div>
+                </div>
+                
+                <div class="confirmation-actions">
+                    <button type="submit" class="btn btn-danger btn-lg" id="deleteButton" disabled>
+                        <i class="fas fa-trash"></i> Delete Post Permanently
+                    </button>
+                    
+                    <a href="{% url 'post-detail' object.pk %}" class="btn btn-outline-secondary btn-lg">
+                        <i class="fas fa-times"></i> Cancel
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const confirmCheckbox = document.getElementById('confirmDelete');
+        const deleteButton = document.getElementById('deleteButton');
+        
+        confirmCheckbox.addEventListener('change', function() {
+            deleteButton.disabled = !this.checked;
+        });
+        
+        // Add confirmation dialog for extra safety
+        deleteButton.addEventListener('click', function(e) {
+            if (!confirm('Are you absolutely sure? This will permanently delete the post and all its comments.')) {
+                e.preventDefault();
+            }
+        });
+    });
+</script>
+{% endblock %}
