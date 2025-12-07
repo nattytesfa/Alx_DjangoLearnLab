@@ -1,6 +1,13 @@
 from django.urls import path
 from django.contrib.auth import views as auth_views
 from . import views
+from .comment_views import (
+    CommentCreateView, 
+    CommentUpdateView, 
+    CommentDeleteView,
+    comment_reply_view,
+    toggle_comment_approval
+)
 from .views import (
     PostListView, 
     PostDetailView, 
@@ -19,7 +26,23 @@ urlpatterns = [
     path('post/new/', PostCreateView.as_view(), name='post-create'),
     path('post/<int:pk>/update/', PostUpdateView.as_view(), name='post-update'),
     path('post/<int:pk>/delete/', PostDeleteView.as_view(), name='post-delete'),
-    path('post/<int:pk>/comment/', views.add_comment, name='add-comment'),
+    
+    # Comment URLs
+    path('post/<int:post_id>/comment/new/', 
+         CommentCreateView.as_view(), 
+         name='comment-create'),
+    path('post/<int:post_id>/comment/<int:parent_id>/reply/', 
+         comment_reply_view, 
+         name='comment-reply'),
+    path('comment/<int:pk>/edit/', 
+         CommentUpdateView.as_view(), 
+         name='comment-edit'),
+    path('comment/<int:pk>/delete/', 
+         CommentDeleteView.as_view(), 
+         name='comment-delete'),
+    path('comment/<int:comment_id>/toggle-approval/', 
+         toggle_comment_approval, 
+         name='toggle-comment-approval'),
     
     # Authentication URLs
     path('register/', UserRegisterView.as_view(), name='register'),
@@ -32,17 +55,10 @@ urlpatterns = [
         next_page='home'
     ), name='logout'),
     
-
-    path('posts/', PostListView.as_view(), name='post-list'),
-    path('post/<int:pk>/', PostDetailView.as_view(), name='post-detail'),
-    path('post/new/', PostCreateView.as_view(), name='post-create'),
-    path('post/<int:pk>/update/', PostUpdateView.as_view(), name='post-update'),
-    path('post/<int:pk>/delete/', PostDeleteView.as_view(), name='post-delete'),
-
     # Profile URL
     path('profile/', UserProfileView.as_view(), name='profile'),
     
-    # Password change URLs (Django built-in)
+    # Password change URLs
     path('password-change/', auth_views.PasswordChangeView.as_view(
         template_name='blog/password_change.html'
     ), name='password_change'),

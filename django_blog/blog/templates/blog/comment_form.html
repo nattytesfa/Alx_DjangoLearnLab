@@ -1,0 +1,120 @@
+{% extends 'blog/base.html' %}
+
+{% block title %}Add Comment - {{ post.title }}{% endblock %}
+
+{% block content %}
+<div class="comment-form-container">
+    <div class="comment-form-header">
+        <h2>Add a Comment</h2>
+        <p class="comment-form-subtitle">Share your thoughts on "{{ post.title }}"</p>
+    </div>
+    
+    <div class="comment-form-card">
+        <form method="POST" class="comment-form" id="commentForm">
+            {% csrf_token %}
+            
+            {% if form.errors %}
+            <div class="alert alert-danger">
+                <strong>Please correct the errors below:</strong>
+                <ul>
+                    {% for field, errors in form.errors.items %}
+                        {% for error in errors %}
+                            <li>{{ error }}</li>
+                        {% endfor %}
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+            
+            {% if parent %}
+            <div class="reply-to">
+                <h4>Replying to:</h4>
+                <div class="parent-comment">
+                    <div class="comment-header">
+                        <strong>{{ parent.author.username }}</strong>
+                        <span>{{ parent.created_at|date:"F d, Y" }}</span>
+                    </div>
+                    <div class="comment-content">
+                        {{ parent.content|truncatewords:30|linebreaks }}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+            
+            <div class="form-group">
+                <label for="{{ form.content.id_for_label }}">Your Comment</label>
+                {{ form.content }}
+                <div class="char-counter" id="comment-counter">
+                    <span id="comment-chars">0</span>/1000 characters
+                </div>
+                <div class="form-help">
+                    Be respectful and constructive. Comments are subject to approval.
+                </div>
+            </div>
+            
+            {% if form.parent %}
+                {{ form.parent }}
+            {% endif %}
+            
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-paper-plane"></i> Post Comment
+                </button>
+                
+                <a href="{% url 'post-detail' post.pk %}" class="btn btn-outline-secondary">
+                    <i class="fas fa-times"></i> Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+    
+    <div class="comment-guidelines">
+        <h4>Comment Guidelines</h4>
+        <ul>
+            <li>Stay on topic and be respectful</li>
+            <li>No personal attacks or harassment</li>
+            <li>No spam or self-promotion</li>
+            <li>Use proper language and formatting</li>
+            <li>Comments may be moderated</li>
+        </ul>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const contentInput = document.getElementById('{{ form.content.id_for_label }}');
+        const commentChars = document.getElementById('comment-chars');
+        
+        if (contentInput && commentChars) {
+            function updateCounter() {
+                commentChars.textContent = contentInput.value.length;
+                
+                // Change color when approaching limit
+                if (contentInput.value.length > 900) {
+                    commentChars.style.color = '#ffc107';
+                } else if (contentInput.value.length > 950) {
+                    commentChars.style.color = '#dc3545';
+                } else {
+                    commentChars.style.color = '#6c757d';
+                }
+            }
+            
+            contentInput.addEventListener('input', updateCounter);
+            updateCounter(); // Initialize
+            
+            // Handle form submission
+            const form = document.getElementById('commentForm');
+            if (form) {
+                form.addEventListener('submit', function(e) {
+                    // You could add additional validation here
+                    if (contentInput.value.trim().length < 5) {
+                        e.preventDefault();
+                        alert('Comment must be at least 5 characters long.');
+                        contentInput.focus();
+                    }
+                });
+            }
+        }
+    });
+</script>
+{% endblock %}

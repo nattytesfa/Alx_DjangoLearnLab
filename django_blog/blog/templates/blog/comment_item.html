@@ -1,0 +1,105 @@
+<!-- comment_item.html - Template for individual comment display -->
+<div class="comment {% if comment.parent %}reply{% endif %} {% if not comment.approved %}comment-pending{% endif %}" 
+     id="comment-{{ comment.pk }}">
+    
+    <div class="comment-header">
+        <div class="comment-author">
+            <strong>{{ comment.author.username }}</strong>
+            {% if comment.author == comment.post.author %}
+            <span class="badge badge-primary">Author</span>
+            {% endif %}
+            {% if not comment.approved %}
+            <span class="badge badge-warning">Pending Approval</span>
+            {% endif %}
+        </div>
+        
+        <div class="comment-meta">
+            <span title="{{ comment.created_at }}">
+                <i class="fas fa-clock"></i> {{ comment.created_at|timesince }} ago
+            </span>
+            {% if comment.is_edited %}
+            <span title="Last edited: {{ comment.updated_at }}">
+                <i class="fas fa-edit"></i> edited
+            </span>
+            {% endif %}
+        </div>
+    </div>
+    
+    <div class="comment-content">
+        {{ comment.content|linebreaks }}
+    </div>
+    
+    <div class="comment-actions">
+        <!-- Reply button -->
+        {% if user.is_authenticated %}
+        <button class="btn btn-sm btn-outline-primary reply-btn" 
+                data-comment-id="{{ comment.pk }}"
+                onclick="showReplyForm({{ comment.pk }})">
+            <i class="fas fa-reply"></i> Reply
+        </button>
+        {% endif %}
+        
+        <!-- Edit/Delete buttons (for comment author) -->
+        {% if user.is_authenticated and comment.can_edit user %}
+        <a href="{% url 'comment-edit' comment.pk %}" 
+           class="btn btn-sm btn-outline-warning">
+            <i class="fas fa-edit"></i> Edit
+        </a>
+        <a href="{% url 'comment-delete' comment.pk %}" 
+           class="btn btn-sm btn-outline-danger delete-comment-btn">
+            <i class="fas fa-trash"></i> Delete
+        </a>
+        {% endif %}
+        
+        <!-- Moderate button (for post author and superusers) -->
+        {% if user.is_authenticated and comment.can_delete user and user != comment.author %}
+        <a href="{% url 'toggle-comment-approval' comment.pk %}" 
+           class="btn btn-sm btn-outline-secondary">
+            <i class="fas fa-{% if comment.approved %}ban{% else %}check{% endif %}"></i>
+            {% if comment.approved %}Unapprove{% else %}Approve{% endif %}
+        </a>
+        {% endif %}
+    </div>
+    
+    <!-- Reply form (hidden by default) -->
+    {% if user.is_authenticated %}
+    <div id="reply-form-{{ comment.pk }}" class="reply-form" style="display: none; margin-top: 1rem;">
+        <form method="POST" action="{% url 'comment-reply' post.pk comment.pk %}">
+            {% csrf_token %}
+            <div class="form-group">
+                <textarea name="content" class="form-control" rows="3" 
+                          placeholder="Write your reply..." maxlength="1000" required></textarea>
+            </div>
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary btn-sm">
+                    <i class="fas fa-paper-plane"></i> Post Reply
+                </button>
+                <button type="button" class="btn btn-outline-secondary btn-sm" 
+                        onclick="hideReplyForm({{ comment.pk }})">
+                    <i class="fas fa-times"></i> Cancel
+                </button>
+            </div>
+        </form>
+    </div>
+    {% endif %}
+    
+    <!-- Replies to this comment -->
+    {% if comment.replies.all %}
+        {% for reply in comment.replies.all %}
+            {% include 'blog/comment_item.html' with comment=reply %}
+        {% endfor %}
+    {% endif %}
+</div>
+
+<script>
+    function showReplyForm(commentId) {
+        const form = document.getElementById(`reply-form-${commentId}`);
+        form.style.display = 'block';
+        form.querySelector('textarea').focus();
+    }
+    
+    function hideReplyForm(commentId) {
+        const form = document.getElementById(`reply-form-${commentId}`);
+        form.style.display = 'none';
+    }
+</script>

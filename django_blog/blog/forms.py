@@ -2,7 +2,72 @@ from django import forms
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
-from .models import Post
+from .models import Post, Comment
+
+
+class CommentForm(forms.ModelForm):
+    """
+    Form for creating and updating comments.
+    """
+    class Meta:
+        model = Comment
+        fields = ['content', 'parent']
+        widgets = {
+            'content': forms.Textarea(attrs={
+                'class': 'form-control',
+                'placeholder': 'Write your comment here...',
+                'rows': 4,
+                'maxlength': '1000'
+            }),
+            'parent': forms.HiddenInput(),  # Hidden field for parent comment ID
+        }
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Remove parent field from display in regular comment form
+        self.fields['parent'].required = False
+        
+    def clean_content(self):
+        """
+        Validate comment content.
+        """
+        content = self.cleaned_data.get('content', '').strip()
+        if not content:
+            raise ValidationError('Comment cannot be empty.')
+        if len(content) < 5:
+            raise ValidationError('Comment should be at least 5 characters long.')
+        if len(content) > 1000:
+            raise ValidationError('Comment cannot exceed 1000 characters.')
+        return content
+
+
+class CommentEditForm(forms.ModelForm):
+    """
+    Form for editing existing comments.
+    """
+    class Meta:
+        model = Comment
+        fields = ['content']
+        widgets = {
+            'content': forms.Textarea(attrs={
+                'class': 'form-control',
+                'rows': 4,
+                'maxlength': '1000'
+            }),
+        }
+    
+    def clean_content(self):
+        """
+        Validate comment content.
+        """
+        content = self.cleaned_data.get('content', '').strip()
+        if not content:
+            raise ValidationError('Comment cannot be empty.')
+        if len(content) < 5:
+            raise ValidationError('Comment should be at least 5 characters long.')
+        if len(content) > 1000:
+            raise ValidationError('Comment cannot exceed 1000 characters.')
+        return content
 
 
 class PostForm(forms.ModelForm):
