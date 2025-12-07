@@ -15,7 +15,9 @@ from .views import (
     PostUpdateView, 
     PostDeleteView,
     UserRegisterView,
-    UserProfileView
+    UserProfileView,
+    PostSearchView,          
+    PostByTagListView  
 )
 
 urlpatterns = [
@@ -27,6 +29,11 @@ urlpatterns = [
     path('post/<int:pk>/update/', PostUpdateView.as_view(), name='post-update'),
     path('post/<int:pk>/delete/', PostDeleteView.as_view(), name='post-delete'),
     
+
+
+# Search and Tag URLs - MUST BE ADDED HERE
+path('search/', PostSearchView.as_view(), name='post-search'),
+path('tags/<slug:tag_slug>/', PostByTagListView.as_view(), name='tag-posts'),
     # Comment URLs
 
     path('post/<int:pk>/comments/new/',  
