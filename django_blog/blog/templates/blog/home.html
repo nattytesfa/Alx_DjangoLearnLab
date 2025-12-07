@@ -1,0 +1,53 @@
+{% extends 'blog/base.html' %}
+
+{% block title %}Home - Django Blog{% endblock %}
+
+{% block content %}
+<div class="hero-section">
+    <h1>Welcome to Django Blog</h1>
+    <p>A simple and elegant blogging platform built with Django</p>
+    {% if not user.is_authenticated %}
+    <div class="hero-buttons">
+        <a href="{% url 'register' %}" class="btn btn-primary">Get Started</a>
+        <a href="{% url 'login' %}" class="btn btn-secondary">Login</a>
+    </div>
+    {% endif %}
+</div>
+
+<div class="features">
+    <div class="feature">
+        <i class="fas fa-pencil-alt"></i>
+        <h3>Write Blog Posts</h3>
+        <p>Create and publish your own blog posts with our intuitive editor.</p>
+    </div>
+    <div class="feature">
+        <i class="fas fa-comments"></i>
+        <h3>Engage with Comments</h3>
+        <p>Readers can comment on your posts and share their thoughts.</p>
+    </div>
+    <div class="feature">
+        <i class="fas fa-users"></i>
+        <h3>Community</h3>
+        <p>Join our community of writers and readers sharing knowledge.</p>
+    </div>
+</div>
+
+{% if recent_posts %}
+<div class="recent-posts">
+    <h2>Recent Blog Posts</h2>
+    <div class="post-grid">
+        {% for post in recent_posts %}
+        <div class="post-card">
+            <h3><a href="{% url 'post-detail' post.pk %}">{{ post.title }}</a></h3>
+            <p class="post-meta">By {{ post.author.username }} | {{ post.published_date|date:"F d, Y" }}</p>
+            <p>{{ post.content|truncatewords:30 }}</p>
+            <a href="{% url 'post-detail' post.pk %}" class="btn btn-outline">Read More</a>
+        </div>
+        {% endfor %}
+    </div>
+    <div class="text-center">
+        <a href="{% url 'post-list' %}" class="btn btn-primary">View All Posts</a>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

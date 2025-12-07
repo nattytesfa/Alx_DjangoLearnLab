@@ -1,0 +1,64 @@
+{% extends 'blog/base.html' %}
+
+{% block title %}{{ post.title }} - Django Blog{% endblock %}
+
+{% block content %}
+<article class="post-detail">
+    <h1>{{ post.title }}</h1>
+    <div class="post-meta">
+        <span><i class="fas fa-user"></i> {{ post.author.username }}</span>
+        <span><i class="fas fa-calendar"></i> {{ post.published_date|date:"F d, Y H:i" }}</span>
+    </div>
+    
+    <div class="post-content">
+        {{ post.content|linebreaks }}
+    </div>
+    
+    <div class="post-actions">
+        {% if user == post.author or user.is_superuser %}
+        <a href="{% url 'post-update' post.pk %}" class="btn btn-warning">Edit Post</a>
+        <a href="{% url 'post-delete' post.pk %}" class="btn btn-danger">Delete Post</a>
+        {% endif %}
+        <a href="{% url 'post-list' %}" class="btn btn-outline">Back to Posts</a>
+    </div>
+</article>
+
+<!-- Comments Section -->
+<div class="comments-section">
+    <h3>Comments ({{ post.comments.count }})</h3>
+    
+    {% if user.is_authenticated %}
+    <div class="add-comment">
+        <h4>Add a Comment</h4>
+        <form method="post" action="{% url 'add-comment' post.pk %}">
+            {% csrf_token %}
+            <textarea name="content" rows="4" placeholder="Write your comment here..." required></textarea>
+            <button type="submit" class="btn btn-primary">Submit Comment</button>
+        </form>
+    </div>
+    {% else %}
+    <p class="alert alert-info">Please <a href="{% url 'login' %}">login</a> to leave a comment.</p>
+    {% endif %}
+    
+    <div class="comments-list">
+        {% for comment in post.comments.all %}
+        {% if comment.approved_comment or user.is_superuser or user == comment.author %}
+        <div class="comment {% if not comment.approved_comment %}comment-pending{% endif %}">
+            <div class="comment-header">
+                <strong>{{ comment.author.username }}</strong>
+                <span>{{ comment.created_date|date:"F d, Y H:i" }}</span>
+                {% if not comment.approved_comment and user.is_superuser %}
+                <span class="badge badge-warning">Pending Approval</span>
+                {% endif %}
+            </div>
+            <div class="comment-content">
+                {{ comment.content|linebreaks }}
+            </div>
+        </div>
+        {% endif %}
+        {% empty %}
+        <p class="alert alert-info">No comments yet. Be the first to comment!</p>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
