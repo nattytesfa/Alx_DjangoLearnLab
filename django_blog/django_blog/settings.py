@@ -84,6 +84,37 @@ AUTH_PASSWORD_VALIDATORS = [
         'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
     },
 ]
+# Database
+# https://docs.djangoproject.com/en/4.2/ref/settings/#databases
+
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
+        # SQLite doesn't use USER, PASSWORD, HOST, PORT
+        # These are included for demonstration/compatibility
+        'USER': '',           # Not used with SQLite
+        'PASSWORD': '',       # Not used with SQLite
+        'HOST': '',           # Not used with SQLite
+        'PORT': '',           # Not used with SQLite
+    }
+}
+
+# Alternative PostgreSQL configuration (commented out for reference)
+"""
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'django_blog_db',
+        'USER': 'blog_user',           # Database user
+        'PASSWORD': 'secure_password', # Database password
+        'HOST': 'localhost',           # Database host
+        'PORT': '5432',                # Database port
+    }
+}
+"""
+
+
 
 # Internationalization
 LANGUAGE_CODE = 'en-us'
