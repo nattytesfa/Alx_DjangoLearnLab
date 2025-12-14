@@ -1,6 +1,6 @@
 from rest_framework.views import APIView
 from notifications.models import Notification
-from django.shortcuts import get_object_or_404
+from rest_framework import viewsets, generics, permissions, status, filters
 from django.contrib.auth import get_user_model  
 from rest_framework import viewsets, generics, permissions, status, filters
 from rest_framework.response import Response
@@ -25,7 +25,7 @@ class LikePostView(APIView):
     def post(self, request, pk):
         """Like a post."""
 
-        post = get_object_or_404(Post, pk=pk) 
+        post = generics.get_object_or_404(Post, pk=pk) 
         
 
         like, created = Like.objects.get_or_create(
@@ -62,7 +62,7 @@ class UnlikePostView(APIView):  # ADD THIS CLASS
     
     def post(self, request, pk):
         """Unlike a post."""
-        post = get_object_or_404(Post, pk=pk)
+        post = generics.get_object_or_404(Post, pk=pk)
         
         # Check if liked
         like = Like.objects.filter(user=request.user, post=post).first()
@@ -307,3 +307,4 @@ class UserFeedView(generics.ListAPIView):
         """Return posts from users that the current user follows."""
         following_users = self.request.user.following.all()
         return Post.objects.filter(author__in=following_users)
+# generics.get_object_or_404(Post, pk=pk)
