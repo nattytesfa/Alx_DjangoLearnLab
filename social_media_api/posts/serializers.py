@@ -1,8 +1,43 @@
 from rest_framework import serializers
-from .models import Post, Comment
+from .models import Post, Comment, Like
 from django.contrib.auth import get_user_model
 
 User = get_user_model()
+
+
+class LikeSerializer(serializers.ModelSerializer):
+    """Serializer for likes."""
+    
+    user = serializers.StringRelatedField()
+    
+    class Meta:
+        model = Like
+        fields = ['id', 'user', 'post', 'created_at']
+        read_only_fields = ['id', 'user', 'created_at']
+
+
+class PostSerializer(serializers.ModelSerializer):
+    """Serializer for posts."""
+    
+    author = serializers.StringRelatedField()
+    likes = LikeSerializer(many=True, read_only=True)
+    like_count = serializers.IntegerField(read_only=True)
+    comment_count = serializers.IntegerField(read_only=True)
+    is_liked = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = Post
+        fields = ['id', 'author', 'title', 'content', 'created_at', 
+                 'updated_at', 'like_count', 'comment_count', 'likes', 'is_liked']
+        read_only_fields = ['id', 'created_at', 'updated_at', 'author', 
+                           'like_count', 'comment_count', 'likes']
+    
+    def get_is_liked(self, obj):
+        """Check if the current user has liked the post."""
+        request = self.context.get('request')
+        if request and request.user.is_authenticated:
+            return obj.user_has_liked(request.user)
+        return False
 
 
 class UserBasicSerializer(serializers.ModelSerializer):

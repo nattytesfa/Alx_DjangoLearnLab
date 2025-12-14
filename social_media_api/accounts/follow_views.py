@@ -1,3 +1,4 @@
+from notifications.models import Notification
 from rest_framework import status, generics, permissions
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -33,6 +34,11 @@ class FollowUserView(APIView):
         
         # Add to following list
         request.user.following.add(user_to_follow)
+
+        Notification.create_follow_notification(
+            recipient=user_to_follow,
+            actor=request.user
+        )
         
         return Response({
             'message': f'You are now following {user_to_follow.username}.',

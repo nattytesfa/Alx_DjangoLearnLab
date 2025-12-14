@@ -11,7 +11,6 @@ from .serializers import (
     UserProfileSerializer, TokenSerializer, PasswordChangeSerializer
 )
 
-
 from .models import CustomUser
 
 

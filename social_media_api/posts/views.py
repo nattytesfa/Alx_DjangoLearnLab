@@ -1,3 +1,4 @@
+from django.contrib.auth import get_user_model  
 from rest_framework import viewsets, generics, permissions, status, filters
 from rest_framework.response import Response
 from rest_framework.decorators import action
@@ -8,11 +9,10 @@ from .serializers import (
     PostSerializer, PostCreateSerializer, PostUpdateSerializer,
     CommentSerializer
 )
-
+from .models import Like
+from .serializers import LikeSerializer
 
 User = get_user_model()
-
-
 class UserFeedView(generics.ListAPIView):
     """
     View to get posts from users that the current user follows.
@@ -130,7 +130,7 @@ class PostViewSet(viewsets.ModelViewSet):
         serializer = CommentSerializer(comments, many=True)
         return Response(serializer.data)
     
-    @action(detail=False, methods=['get'], permission_classes=[permissions.AllowAny])
+    @action(detail=False, methods=['get'],permission_classes=[permissions.AllowAny])
     def search(self, request):
         """Search posts by title or content."""
         query = request.query_params.get('q', '')
@@ -155,6 +155,26 @@ class PostViewSet(viewsets.ModelViewSet):
         
         serializer = self.get_serializer(posts, many=True)
         return Response(serializer.data)
+
+    @action(detail=True,methods=['post'],
+permission_classes=[permissions.IsAuthenticated])
+
+    def like(self, request, pk=None):
+        """Like or unlike a post."""
+        from .like_views import ToggleLikeView
+        toggle_view = ToggleLikeView()
+        toggle_view.request = request
+        toggle_view.format_kwarg = None
+        return toggle_view.post(request, pk)
+    
+    @action(detail=True, methods=['get'], permission_classes=[permissions.AllowAny])
+    def likes(self, request, pk=None):
+        """Get users who liked this post."""
+        from .like_views import PostLikesListView
+        likes_view = PostLikesListView()
+        likes_view.request = request
+        likes_view.format_kwarg = None
+        return likes_view.get(request, pk)
 
 
 class CommentViewSet(viewsets.ModelViewSet):
