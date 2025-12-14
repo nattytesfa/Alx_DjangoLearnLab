@@ -6,10 +6,10 @@ from .models import Notification
 class NotificationAdmin(admin.ModelAdmin):
     """Admin interface for notifications."""
     
-    list_display = ['id', 'recipient', 'actor', 'verb', 'notification_type', 'read', 'created_at']
-    list_filter = ['notification_type', 'read', 'created_at']
+    list_display = ['id', 'recipient', 'actor', 'verb', 'notification_type', 'read', 'timestamp']
+    list_filter = ['notification_type', 'read', 'timestamp']
     search_fields = ['recipient__username', 'actor__username', 'verb']
-    readonly_fields = ['created_at']
+    readonly_fields = ['timestamp']
     list_per_page = 20
     
     actions = ['mark_as_read', 'mark_as_unread']

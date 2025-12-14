@@ -44,14 +44,14 @@ class Notification(models.Model):
     target = GenericForeignKey('target_content_type', 'target_object_id')
     
     read = models.BooleanField(default=False)
-    created_at = models.DateTimeField(auto_now_add=True)
+    timestamp = models.DateTimeField(auto_now_add=True)
     
     class Meta:
-        ordering = ['-created_at']
+        ordering = ['-timestamp']
         verbose_name = 'Notification'
         verbose_name_plural = 'Notifications'
         indexes = [
-            models.Index(fields=['recipient', 'read', 'created_at']),
+            models.Index(fields=['recipient', 'read', 'timestamp']),
             models.Index(fields=['recipient', 'notification_type']),
         ]
     

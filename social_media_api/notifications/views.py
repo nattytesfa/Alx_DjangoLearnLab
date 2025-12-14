@@ -39,7 +39,7 @@ class NotificationViewSet(GenericViewSet):
         if notification_type:
             queryset = queryset.filter(notification_type=notification_type)
         
-        return queryset.order_by('-created_at')
+        return queryset.order_by('-timestamp')
     
     def list(self, request):
         """List all notifications for the current user."""

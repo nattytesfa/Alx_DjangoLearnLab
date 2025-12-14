@@ -16,9 +16,9 @@ class NotificationSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'recipient', 'actor', 'actor_username', 'actor_profile_picture',
             'verb', 'notification_type', 'target', 'target_object',
-            'read', 'created_at', 'time_since'
+            'read', 'timestamp', 'time_since'
         ]
-        read_only_fields = ['id', 'created_at']
+        read_only_fields = ['id', 'timestamp']
     
     def get_actor_profile_picture(self, obj):
         """Get actor's profile picture URL."""
@@ -41,7 +41,7 @@ class NotificationSerializer(serializers.ModelSerializer):
         from django.utils import timezone
         from django.utils.timesince import timesince
         
-        return timesince(obj.created_at, timezone.now()) + ' ago'
+        return timesince(obj.timestamp, timezone.now()) + ' ago'
 
 
 class NotificationUpdateSerializer(serializers.ModelSerializer):
