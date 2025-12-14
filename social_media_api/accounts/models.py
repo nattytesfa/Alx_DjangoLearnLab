@@ -56,3 +56,10 @@ class CustomUser(AbstractUser):
     def following_count(self):
         """Return number of users being followed."""
         return self.following.count()
+    def is_following(self, user):
+        """Check if this user is following another user."""
+        return self.following.filter(id=user.id).exists()
+    
+    def is_followed_by(self, user):
+        """Check if this user is followed by another user."""
+        return self.followers.filter(id=user.id).exists()

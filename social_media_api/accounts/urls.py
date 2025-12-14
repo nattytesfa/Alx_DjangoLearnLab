@@ -1,7 +1,21 @@
 from django.urls import path
 from . import views
+from .follow_views import (
+    FollowUserView, UnfollowUserView, ToggleFollowView,
+    FollowersListView, FollowingListView, CheckFollowStatusView
+)
 
 urlpatterns = [
+    # Follow management endpoints
+    path('follow/<int:user_id>/', FollowUserView.as_view(), name='follow-user'),
+    path('unfollow/<int:user_id>/', UnfollowUserView.as_view(), name='unfollow-user'),
+    path('toggle-follow/<int:user_id>/', ToggleFollowView.as_view(), name='toggle-follow'),
+    path('check-follow/<int:user_id>/', CheckFollowStatusView.as_view(), name='check-follow-status'),
+    
+    # Followers/Following lists
+    path('users/<int:user_id>/followers/', FollowersListView.as_view(), name='user-followers'),
+    path('users/<int:user_id>/following/', FollowingListView.as_view(), name='user-following'),
+
     # Authentication endpoints
     path('register/', views.UserRegistrationView.as_view(), name='register'),
     path('login/', views.UserLoginView.as_view(), name='login'),

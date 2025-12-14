@@ -7,11 +7,52 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated, AllowAny, IsAdminUser
 from django_filters import rest_framework as filters
 from rest_framework.filters import SearchFilter, OrderingFilter
+
+filters.SearchFilter = SearchFilter
+filters.OrderingFilter = OrderingFilter
+
 from .models import Author, Book
 from .serializers import AuthorSerializer, BookSerializer
 from .mixins import CustomCreateMixin, CustomUpdateMixin, CustomDestroyMixin
 from .permissions import IsAuthenticatedOrReadOnly, IsAdminOrReadOnly
 
+
+
+
+class BookUpdateGenericView(generics.UpdateAPIView):
+    """
+    Update view for the specific URL pattern books/update/
+    This would require passing the ID in the request body
+    """
+    queryset = Book.objects.all()
+    serializer_class = BookSerializer
+    permission_classes = [IsAuthenticated]
+    
+    def get_object(self):
+        # Get book ID from request data instead of URL
+        book_id = self.request.data.get('id')
+        if book_id:
+            return generics.get_object_or_404(Book, pk=book_id)
+        from rest_framework import serializers
+        raise serializers.ValidationError("Book ID is required")
+
+
+class BookDeleteGenericView(generics.DestroyAPIView):
+    """
+    Delete view for the specific URL pattern books/delete/
+    This would require passing the ID in the request body
+    """
+    queryset = Book.objects.all()
+    serializer_class = BookSerializer
+    permission_classes = [IsAuthenticated]
+    
+    def get_object(self):
+        # Get book ID from request data instead of URL
+        book_id = self.request.data.get('id')
+        if book_id:
+            return generics.get_object_or_404(Book, pk=book_id)
+        from rest_framework import serializers
+        raise serializers.ValidationError("Book ID is required")
 
 class BookListView(generics.ListAPIView):
     """
@@ -30,6 +71,7 @@ class BookListView(generics.ListAPIView):
     # Enable filtering, searching, and ordering
     # Use the imported filters.DjangoFilterBackend
     filter_backends = [filters.DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+
     filterset_fields = ['publication_year', 'author', 'title']
     search_fields = ['title', 'author__name']
     ordering_fields = ['title', 'publication_year', 'author__name', 'id']

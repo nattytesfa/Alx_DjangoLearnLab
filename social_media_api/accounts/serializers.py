@@ -5,6 +5,30 @@ from rest_framework import serializers
 from rest_framework.authtoken.models import Token
 
 
+class UserProfileSerializer(serializers.ModelSerializer):
+    """Serializer for user profile."""
+    
+    follower_count = serializers.IntegerField(read_only=True)
+    following_count = serializers.IntegerField(read_only=True)
+    is_following = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = get_user_model()
+        fields = [
+            'id', 'email', 'username', 'first_name', 'last_name',
+            'bio', 'profile_picture', 'website', 'location',
+            'date_joined', 'last_login', 'follower_count', 'following_count',
+            'is_following'
+        ]
+        read_only_fields = ['id', 'date_joined', 'last_login']
+    
+    def get_is_following(self, obj):
+        """Check if the current user is following this user."""
+        request = self.context.get('request')
+        if request and request.user.is_authenticated:
+            return request.user.is_following(obj)
+        return False
+
 class UserRegistrationSerializer(serializers.ModelSerializer):
     """Serializer for user registration."""
     
