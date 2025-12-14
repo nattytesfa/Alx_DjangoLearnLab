@@ -1,3 +1,6 @@
+from rest_framework.views import APIView
+from notifications.models import Notification
+from django.shortcuts import get_object_or_404
 from django.contrib.auth import get_user_model  
 from rest_framework import viewsets, generics, permissions, status, filters
 from rest_framework.response import Response
@@ -13,6 +16,71 @@ from .models import Like
 from .serializers import LikeSerializer
 
 User = get_user_model()
+
+class LikePostView(APIView): 
+    """View for liking a post."""
+    
+    permission_classes = [permissions.IsAuthenticated]
+    
+    def post(self, request, pk):
+        """Like a post."""
+
+        post = get_object_or_404(Post, pk=pk) 
+        
+
+        like, created = Like.objects.get_or_create(
+            user=request.user, 
+            post=post
+        )
+        
+        if not created:
+            return Response(
+                {'error': 'You have already liked this post.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        if request.user != post.author:
+            Notification.objects.create(
+                recipient=post.author,
+                actor=request.user,
+                verb='liked your post',
+                notification_type='like',
+                target=post
+            )
+        
+        return Response({
+            'message': 'Post liked successfully.',
+            'like_count': post.like_count,
+            'is_liked': True
+        }, status=status.HTTP_201_CREATED)
+
+
+class UnlikePostView(APIView):  # ADD THIS CLASS
+    """View for unliking a post."""
+    
+    permission_classes = [permissions.IsAuthenticated]
+    
+    def post(self, request, pk):
+        """Unlike a post."""
+        post = get_object_or_404(Post, pk=pk)
+        
+        # Check if liked
+        like = Like.objects.filter(user=request.user, post=post).first()
+        if not like:
+            return Response(
+                {'error': 'You have not liked this post.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # Delete like
+        like.delete()
+        
+        return Response({
+            'message': 'Post unliked successfully.',
+            'like_count': post.like_count,
+            'is_liked': False
+        }, status=status.HTTP_200_OK)
+
 class UserFeedView(generics.ListAPIView):
     """
     View to get posts from users that the current user follows.
@@ -100,6 +168,18 @@ class PostViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated])
     def like(self, request, pk=None):
         """Like or unlike a post."""
+        like_view = LikePostView()
+        like_view.request = request
+        like_view.format_kwarg = None
+        return like_view.post(request, pk)
+    
+    @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated])
+    def unlike(self, request, pk=None):
+        """Unlike a post."""
+        unlike_view = UnlikePostView()
+        unlike_view.request = request
+        unlike_view.format_kwarg = None
+        return unlike_view.post(request, pk)
         post = self.get_object()
         user = request.user
         
